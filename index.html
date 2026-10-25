@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#16302e">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Dudkov sprievodca</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,14 +14,15 @@
 <style>
 /* Layout: map-first one-screen app; a bottom sheet carries the story, a top bar the route. */
 :root {
-  --ink: #16302e;        /* deep river green */
+  --ink: #16302e;
   --paper: #f7f6f2;
   --surface: #ffffff;
   --muted: #5d6d6a;
   --line: #dfe3df;
-  --accent: #b5462f;     /* Rožmberk rose red */
+  --accent: #b5462f;
   --accent-ink: #ffffff;
   --river: #2f7f86;
+  --gold: #a87a1c;
   --done: #7c8a87;
   --me: #1a73e8;
   --shadow: 0 -6px 24px rgba(10, 30, 28, .14);
@@ -31,29 +33,31 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --ink: #e7efec; --paper: #0f1a19; --surface: #182524; --muted: #9db0ac; --line: #2b3b39;
-    --accent: #e0745b; --accent-ink: #1a0f0c; --river: #6cc0c6; --done: #6d7f7b; --me: #6ea8ff;
+    --accent: #e0745b; --accent-ink: #1a0f0c; --river: #6cc0c6; --gold: #e2b75a; --done: #6d7f7b; --me: #6ea8ff;
     --shadow: 0 -6px 24px rgba(0,0,0,.5); color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --ink: #e7efec; --paper: #0f1a19; --surface: #182524; --muted: #9db0ac; --line: #2b3b39;
-  --accent: #e0745b; --accent-ink: #1a0f0c; --river: #6cc0c6; --done: #6d7f7b; --me: #6ea8ff;
+  --accent: #e0745b; --accent-ink: #1a0f0c; --river: #6cc0c6; --gold: #e2b75a; --done: #6d7f7b; --me: #6ea8ff;
   --shadow: 0 -6px 24px rgba(0,0,0,.5); color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
 body { background: var(--paper); color: var(--ink); font: 17px/1.5 var(--body); -webkit-text-size-adjust: 100%; }
-button { font: inherit; color: inherit; cursor: pointer; }
-button:focus-visible, a:focus-visible { outline: 3px solid var(--river); outline-offset: 2px; }
+button, select { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, a:focus-visible, select:focus-visible { outline: 3px solid var(--river); outline-offset: 2px; }
+a { color: var(--river); }
 h1, h2, h3 { font-family: var(--display); font-weight: 400; text-wrap: balance; margin: 0; line-height: 1.15; }
 [hidden] { display: none !important; }
 
 /* ---------- Home ---------- */
-#home { min-height: 100%; padding: max(24px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 32px max(16px, env(safe-area-inset-left)); max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+#home { min-height: 100%; padding: max(24px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 32px max(16px, env(safe-area-inset-left)); max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
 .brand { display: flex; flex-direction: column; gap: 6px; }
 .brand small { text-transform: uppercase; letter-spacing: .12em; font-size: 12px; color: var(--muted); font-weight: 700; }
 .brand h1 { font-size: 36px; }
 .brand p { margin: 0; color: var(--muted); max-width: 52ch; }
+#cities { display: flex; flex-direction: column; gap: 16px; }
 .city { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
 .city header { display: flex; flex-direction: column; gap: 4px; }
 .city h2 { font-size: 26px; }
@@ -62,60 +66,84 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; text-wrap: balance; 
 .routes { display: flex; flex-direction: column; gap: 10px; }
 .route { text-align: left; border: 1px solid var(--line); background: var(--paper); border-radius: 10px; padding: 12px 14px; display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: center; }
 .route strong { font-size: 17px; }
-.route span { color: var(--muted); font-size: 14px; grid-column: 1; }
-.route .go { grid-row: 1 / span 2; grid-column: 2; color: var(--accent); font-weight: 700; font-size: 22px; }
+.route .d { color: var(--muted); font-size: 14px; grid-column: 1; }
+.route .p { color: var(--river); font-size: 13px; font-weight: 700; grid-column: 1; }
+.route .go { grid-row: 1 / span 3; grid-column: 2; color: var(--accent); font-weight: 700; font-size: 22px; }
 .route:hover { border-color: var(--river); }
-.hint { color: var(--muted); font-size: 14px; margin: 0; }
+.notes { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; font-size: 15px; }
+.notes h3 { font-size: 18px; }
+.notes ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
 
 /* ---------- Map screen ---------- */
 #tour { position: fixed; inset: 0; display: flex; flex-direction: column; }
-.mapwrap { flex: 1; min-height: 0; position: relative; }
+.mapwrap { flex: 1; min-height: 120px; position: relative; }
 #map { position: absolute; inset: 0; background: var(--paper); }
 .topbar { position: absolute; z-index: 500; top: 0; left: 0; right: 0; padding: calc(env(safe-area-inset-top, 0px) + 10px) max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left)); display: flex; gap: 8px; align-items: center; pointer-events: none; }
 .topbar > * { pointer-events: auto; }
 .chip { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; box-shadow: 0 2px 10px rgba(0,0,0,.12); font-size: 15px; line-height: 1.2; min-height: 40px; display: inline-flex; align-items: center; gap: 6px; }
 .chip.title { flex: 1; min-width: 0; overflow: hidden; }
-.chip.title span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip.title > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chip.title b { font-family: var(--display); font-weight: 400; }
 .chip.icon { width: 40px; padding: 0; justify-content: center; font-size: 18px; }
-.fab { position: absolute; z-index: 500; right: max(12px, env(safe-area-inset-right)); width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink); box-shadow: 0 2px 10px rgba(0,0,0,.18); font-size: 20px; display: grid; place-items: center; }
+.fab { position: absolute; z-index: 500; right: max(12px, env(safe-area-inset-right)); bottom: 40px; width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink); box-shadow: 0 2px 10px rgba(0,0,0,.18); font-size: 20px; display: grid; place-items: center; }
 .fab.on { background: var(--me); color: #fff; border-color: transparent; }
 
 /* Bottom sheet */
-.sheet { position: relative; z-index: 600; background: var(--surface); box-shadow: var(--shadow); border-radius: 18px 18px 0 0; padding: 10px max(16px, env(safe-area-inset-right)) calc(env(safe-area-inset-bottom, 0px) + 14px) max(16px, env(safe-area-inset-left)); display: flex; flex-direction: column; gap: 12px; max-height: 62vh; }
-.grab { width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto; border: 0; padding: 0; }
-.status { display: flex; align-items: center; gap: 10px; font-size: 15px; color: var(--muted); }
+.sheet { position: relative; z-index: 600; background: var(--surface); box-shadow: var(--shadow); border-radius: 18px 18px 0 0; padding: 10px max(16px, env(safe-area-inset-right)) calc(env(safe-area-inset-bottom, 0px) + 14px) max(16px, env(safe-area-inset-left)); display: flex; flex-direction: column; gap: 12px; max-height: 66vh; }
+.sheet.tall { max-height: 72vh; }
+.grab { width: 44px; height: 6px; border-radius: 3px; background: var(--line); margin: 0 auto; border: 0; padding: 0; }
+.status { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--muted); }
+.status .prog { margin-left: auto; font-variant-numeric: tabular-nums; }
 .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--done); flex: none; }
 .dot.live { background: #2e9d5b; box-shadow: 0 0 0 4px rgba(46,157,91,.2); }
 .dot.warn { background: #d08a1c; }
 .next { display: flex; align-items: center; gap: 12px; }
-.next .num { flex: none; }
 .next .txt { flex: 1; min-width: 0; }
 .next .txt strong { display: block; font-family: var(--display); font-weight: 400; font-size: 19px; line-height: 1.2; }
 .next .txt span { color: var(--muted); font-size: 14px; }
-.dist { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--river); white-space: nowrap; }
-.num { width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 700; font-size: 14px; border: 2px solid var(--surface); }
-.num.done { background: var(--done); }
+.dirbox { display: flex; flex-direction: column; align-items: center; gap: 2px; flex: none; min-width: 64px; }
+.arrow { width: 34px; height: 34px; display: grid; place-items: center; color: var(--river); transition: transform .4s ease; }
+.dist { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--river); white-space: nowrap; font-size: 15px; }
+.num { width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 700; font-size: 14px; flex: none; }
 .btn { border: 0; border-radius: 12px; padding: 14px 18px; font-weight: 700; background: var(--accent); color: var(--accent-ink); min-height: 50px; }
 .btn.secondary { background: var(--paper); color: var(--ink); border: 1px solid var(--line); }
+.btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
 .row { display: flex; gap: 8px; flex-wrap: wrap; }
 .row .btn { flex: 1; }
+.ask { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.ask p { margin: 0; }
 
-.story { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.story { overflow-y: auto; display: flex; flex-direction: column; gap: 12px; min-height: 0; overscroll-behavior: contain; }
 .story h2 { font-size: 24px; }
-.story .kicker { text-transform: uppercase; letter-spacing: .1em; font-size: 12px; font-weight: 700; color: var(--accent); }
+.kicker { text-transform: uppercase; letter-spacing: .1em; font-size: 12px; font-weight: 700; color: var(--accent); }
+.kicker.small { color: var(--gold); }
 .story p { margin: 0; max-width: 65ch; }
-.story .tip { background: var(--paper); border-radius: 10px; padding: 10px 12px; font-size: 15px; }
-.story .tip b { color: var(--river); }
-.sentence.now { background: color-mix(in srgb, var(--river) 18%, transparent); border-radius: 3px; }
-.player { display: flex; gap: 8px; }
-.player .btn { flex: 1; padding: 12px; }
+.look { margin: 0; padding: 12px 14px 12px 14px; list-style: none; background: color-mix(in srgb, var(--river) 10%, var(--surface)); border-radius: 12px; display: flex; flex-direction: column; gap: 8px; font-size: 16px; }
+.look li { display: grid; grid-template-columns: 22px 1fr; gap: 6px; }
+.look li::before { content: "👁"; font-size: 15px; line-height: 1.5; }
+.look .lh { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--river); display: block; }
+.look .lh::before { content: none; }
+.more { border-top: 1px solid var(--line); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.more h3 { font-size: 18px; }
+.tip, .info { border-radius: 10px; padding: 10px 12px; font-size: 15px; }
+.tip { background: var(--paper); }
+.tip b { color: var(--river); }
+.info { border: 1px dashed var(--line); color: var(--muted); }
+.info b { color: var(--ink); }
+.report { font-size: 13px; color: var(--muted); }
+.sentence.now { background: color-mix(in srgb, var(--river) 20%, transparent); border-radius: 3px; }
+.player { display: grid; grid-template-columns: auto 1fr auto auto; gap: 8px; }
+.player .btn { padding: 12px 14px; }
+.player .main { background: var(--river); color: #fff; }
 
 /* Menu */
-.menu { position: absolute; z-index: 700; top: calc(env(safe-area-inset-top, 0px) + 58px); right: max(12px, env(safe-area-inset-right)); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 8px 30px rgba(0,0,0,.2); padding: 8px; width: min(300px, calc(100vw - 24px)); display: flex; flex-direction: column; }
+.menu { position: absolute; z-index: 700; top: calc(env(safe-area-inset-top, 0px) + 58px); right: max(12px, env(safe-area-inset-right)); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 8px 30px rgba(0,0,0,.2); padding: 8px; width: min(320px, calc(100vw - 24px)); display: flex; flex-direction: column; max-height: 70vh; overflow-y: auto; }
 .menu button, .menu label { background: none; border: 0; text-align: left; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 16px; }
+.menu label.col { flex-direction: column; align-items: stretch; }
+.menu select { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper); font-size: 15px; }
 .menu button:hover { background: var(--paper); }
 .menu .sep { height: 1px; background: var(--line); margin: 4px 0; }
+.menu .hintline { font-size: 13px; color: var(--muted); padding: 0 12px 8px; }
 .menu input[type=range] { width: 110px; }
 .toast { position: absolute; z-index: 800; left: 50%; transform: translateX(-50%); top: calc(env(safe-area-inset-top, 0px) + 64px); background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 10px; font-size: 15px; max-width: calc(100vw - 32px); text-align: center; }
 
@@ -123,7 +151,11 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; text-wrap: balance; 
 .pin { width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font: 700 14px var(--body); border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
 .pin.done { background: var(--done); }
 .pin.active { outline: 3px solid var(--river); outline-offset: 2px; }
+.pin.next { animation: pulse 1.6s ease-in-out infinite; }
+.mini { width: 14px; height: 14px; border-radius: 50%; background: var(--gold); border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
+.mini.done { background: var(--done); }
 .me { width: 18px; height: 18px; border-radius: 50%; background: var(--me); border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(26,115,232,.25); }
+@keyframes pulse { 50% { box-shadow: 0 0 0 8px rgba(181,70,47,.25); } }
 .leaflet-container { font: inherit; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
@@ -137,89 +169,120 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; text-wrap: balance; 
     <p>Vyber mesto a okruh. Choď s telefónom v ruke a keď prídeš k pamiatke, sprievodca ti o nej sám porozpráva.</p>
   </div>
   <div id="cities"></div>
-  <p class="hint">Tip: pred odchodom si stránku pridaj na plochu telefónu (Zdieľať → Pridať na plochu). Počas prechádzky nechaj obrazovku zapnutú.</p>
+  <section class="notes">
+    <h3>Pred prechádzkou</h3>
+    <ul>
+      <li>Vezmi si slúchadlá a nechaj obrazovku zapnutú. Keď zhasne, sprievodca nevie, kde si.</li>
+      <li><b>Lepší hlas na iPhone:</b> Nastavenia → Prístupnosť → Hovorený obsah → Hlasy → Slovenčina → stiahni hlas s označením „vylepšený“ alebo „prémiový“. Potom ho vyber v menu ⋯ sprievodcu.</li>
+      <li><b>Na Androide:</b> Nastavenia → Prevod textu na reč → Google → Inštalovať hlasové údaje → slovenčina.</li>
+      <li>Stránku si pridaj na plochu: Zdieľať → Pridať na plochu.</li>
+    </ul>
+  </section>
 </main>
 
 <section id="tour" hidden>
   <div class="mapwrap">
-  <div id="map" aria-label="Mapa"></div>
-  <div class="topbar">
-    <button class="chip icon" id="back" aria-label="Späť na výber">←</button>
-    <div class="chip title"><span><b id="tourCity"></b> · <span id="tourRoute"></span></span></div>
-    <button class="chip icon" id="menuBtn" aria-label="Nastavenia" aria-expanded="false">⋯</button>
-  </div>
-  <button class="fab" id="follow" aria-label="Sledovať moju polohu" style="bottom: 40px">◎</button>
+    <div id="map" aria-label="Mapa"></div>
+    <div class="topbar">
+      <button class="chip icon" id="back" aria-label="Späť na výber">←</button>
+      <div class="chip title"><span><b id="tourCity"></b> · <span id="tourRoute"></span></span></div>
+      <button class="chip icon" id="menuBtn" aria-label="Nastavenia" aria-expanded="false">⋯</button>
+    </div>
+    <button class="fab" id="follow" aria-label="Sledovať moju polohu">◎</button>
 
-  <div class="menu" id="menu" hidden>
-    <label for="rate">Rýchlosť čítania <input type="range" id="rate" min="0.7" max="1.4" step="0.05" value="1"></label>
-    <label for="auto">Čítať automaticky <input type="checkbox" id="auto" checked></label>
-    <div class="sep"></div>
-    <button id="simBtn">Skúšobný režim (ťuknutím na mapu) <span id="simState">vyp.</span></button>
-    <button id="resetBtn">Začať okruh odznova</button>
-    <button id="testVoice">Vyskúšať hlas</button>
-  </div>
-  <div class="toast" id="toast" hidden></div>
+    <div class="menu" id="menu" hidden>
+      <label class="col" for="voiceSel">Hlas sprievodcu <select id="voiceSel"></select></label>
+      <div class="hintline" id="voiceHint"></div>
+      <label for="rate">Rýchlosť čítania <input type="range" id="rate" min="0.7" max="1.4" step="0.05" value="1"></label>
+      <label for="auto">Čítať automaticky <input type="checkbox" id="auto" checked></label>
+      <label for="smalls">Drobnosti po ceste <input type="checkbox" id="smalls" checked></label>
+      <div class="sep"></div>
+      <button id="testVoice">Vyskúšať hlas</button>
+      <button id="simBtn">Skúšobný režim (ťukni na mapu) <span id="simState">vyp.</span></button>
+      <button id="resetBtn">Začať okruh odznova</button>
+    </div>
+    <div class="toast" id="toast" hidden></div>
   </div>
 
   <div class="sheet" id="sheet">
     <div class="grab" aria-hidden="true"></div>
-    <div class="status"><span class="dot" id="gpsDot"></span><span id="gpsText">GPS je vypnuté</span></div>
+    <div class="status"><span class="dot" id="gpsDot"></span><span id="gpsText">GPS je vypnuté</span><span class="prog" id="prog"></span></div>
 
     <div id="startPane" class="row">
       <button class="btn" id="startBtn">Spustiť prechádzku</button>
     </div>
 
+    <div id="askPane" class="ask" hidden>
+      <p id="askText"></p>
+      <div class="row"><button class="btn" id="askYes">Áno, rozprávaj</button><button class="btn secondary" id="askNo">Ešte nie</button></div>
+    </div>
+
     <div id="nextPane" class="next" hidden>
       <div class="num" id="nextNum">1</div>
-      <div class="txt"><span>Ďalšia zastávka</span><strong id="nextName"></strong></div>
-      <div class="dist" id="nextDist">–</div>
+      <div class="txt"><span id="nextLabel">Ďalšia zastávka</span><strong id="nextName"></strong></div>
+      <div class="dirbox">
+        <div class="arrow" id="arrow" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 30 30"><path d="M15 2 L25 26 L15 20 L5 26 Z" fill="currentColor"/></svg></div>
+        <div class="dist" id="nextDist">–</div>
+      </div>
     </div>
 
     <article class="story" id="story" hidden>
       <div class="kicker" id="storyKicker"></div>
       <h2 id="storyTitle"></h2>
       <p id="storyText"></p>
+      <ul class="look" id="storyLook"></ul>
+      <button class="btn ghost" id="moreBtn">Povedz mi viac</button>
+      <section class="more" id="more" hidden>
+        <h3>Viac o mieste</h3>
+        <p id="moreText"></p>
+      </section>
       <p class="tip" id="storyTip" hidden><b>Tip:</b> <span></span></p>
+      <p class="info" id="storyInfo" hidden><b>Prakticky:</b> <span></span></p>
+      <a class="report" id="report" href="#" target="_blank" rel="noopener">Našiel si chybu v texte? Daj vedieť.</a>
     </article>
     <div class="player" id="player" hidden>
-      <button class="btn secondary" id="playBtn">⏸ Pauza</button>
-      <button class="btn secondary" id="closeStory">Zavrieť</button>
+      <button class="btn secondary" id="prevBtn" aria-label="O vetu späť">⏮</button>
+      <button class="btn main" id="playBtn">⏸ Pauza</button>
+      <button class="btn secondary" id="skipBtn" aria-label="Preskočiť">⏭</button>
+      <button class="btn secondary" id="closeStory">Ďalej</button>
     </div>
   </div>
 </section>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="mesta.js"></script>
+<script src="praha.js"></script>
 <script>
 (() => {
   const $ = (id) => document.getElementById(id);
   const MESTA = window.MESTA || [];
+  const REPO = 'https://github.com/dudko41/dudkov-sprievodca/issues/new';
   const store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
   };
-
-  const allRoutes = (m) => [...m.okruhy, { id: 'vsetko', nazov: 'Voľná prechádzka', popis: 'Bez poradia. Sprievodca sa ozve pri každej pamiatke, ku ktorej prídeš.', cas: 'koľko chceš', dlzka: '', zastavky: m.miesta.map(x => x.id) }];
+  const fmtDist = (d) => d < 1000 ? `${Math.round(d / 10) * 10} m` : `${(d / 1000).toFixed(1).replace('.', ',')} km`;
+  const allRoutes = (m) => [...m.okruhy, { id: 'vsetko', nazov: 'Voľná prechádzka', popis: 'Bez poradia. Sprievodca sa ozve pri každej pamiatke, ku ktorej prídeš.', cas: 'koľko chceš', dlzka: '', zastavky: m.miesta.filter(x => x.typ !== 'drobnost').map(x => x.id), drobnosti: m.miesta.filter(x => x.typ === 'drobnost').map(x => x.id) }];
+  const visitKey = (m, r) => `ts-visited-${m.id}-${r.id}`;
 
   /* ---------- Home ---------- */
   function renderHome() {
-    const wrap = $('cities');
-    wrap.innerHTML = '';
+    const wrap = $('cities'); wrap.innerHTML = '';
     MESTA.forEach(m => {
-      const el = document.createElement('section');
-      el.className = 'city';
+      const el = document.createElement('section'); el.className = 'city';
       el.innerHTML = `<header><h2></h2><div class="meta"></div></header><p></p><div class="routes"></div>`;
       el.querySelector('h2').textContent = m.nazov;
-      el.querySelector('.meta').textContent = `${m.krajina} · ${m.miesta.length} zastávok`;
+      const main = m.miesta.filter(x => x.typ !== 'drobnost').length, small = m.miesta.length - main;
+      el.querySelector('.meta').textContent = `${m.krajina} · ${main} zastávok` + (small ? ` · ${small} drobností po ceste` : '');
       el.querySelector('p').textContent = m.uvod;
       const routes = el.querySelector('.routes');
-      const all = allRoutes(m);
-      all.forEach(r => {
-        const b = document.createElement('button');
-        b.className = 'route';
-        b.innerHTML = `<strong></strong><span></span><span class="go" aria-hidden="true">→</span>`;
+      allRoutes(m).forEach(r => {
+        const b = document.createElement('button'); b.className = 'route';
+        b.innerHTML = `<strong></strong><span class="d"></span><span class="p" hidden></span><span class="go" aria-hidden="true">→</span>`;
         b.querySelector('strong').textContent = r.nazov;
-        b.querySelectorAll('span')[0].textContent = [r.cas, r.dlzka].filter(Boolean).join(' · ') + ' — ' + r.popis;
+        b.querySelector('.d').textContent = [r.cas, r.dlzka].filter(Boolean).join(' · ') + ' — ' + r.popis;
+        const v = store.get(visitKey(m, r), []).filter(id => r.zastavky.includes(id)).length;
+        if (v && r.id !== 'vsetko') { const p = b.querySelector('.p'); p.hidden = false; p.textContent = v >= r.zastavky.length ? 'Dokončené ✓' : `Rozpracované: ${v} z ${new Set(r.zastavky).size}. Pokračuj, kde si skončil.`; }
         b.onclick = () => openTour(m, r);
         routes.appendChild(b);
       });
@@ -227,107 +290,129 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; text-wrap: balance; 
     });
   }
 
-  /* ---------- Tour state ---------- */
-  let map, city, route, stops = [], markers = {}, line, meMarker, meCircle;
-  let pos = null, watchId = null, following = true, simulate = false, wakeLock = null, started = false;
-  let visited = new Set(), queue = [], current = null;
-  const settings = store.get('ts-settings', { rate: 1, auto: true });
-  $('rate').value = settings.rate; $('auto').checked = settings.auto;
+  /* ---------- State ---------- */
+  let map, city, route, stops = [], smalls = [], markers = {}, line, meMarker, meCircle;
+  let pos = null, watchId = null, following = true, simulate = false, wakeLock = null, started = false, heading = null;
+  let visited = new Set(), queue = [], current = null, introDone = false, finished = false, asking = null, dwell = {};
+  const settings = Object.assign({ rate: 1, auto: true, smalls: true, voice: '' }, store.get('ts-settings', {}));
+  $('rate').value = settings.rate; $('auto').checked = settings.auto; $('smalls').checked = settings.smalls;
+  const saveSettings = () => store.set('ts-settings', settings);
 
   function openTour(m, r) {
     city = m; route = r;
-    stops = r.zastavky.map(id => m.miesta.find(x => x.id === id)).filter(Boolean);
-    // the same place can close a loop (start = finish); keep first occurrence for numbering
-    const seen = new Set(); stops = stops.filter(s => !seen.has(s.id) && seen.add(s.id));
-    visited = new Set(store.get(`ts-visited-${m.id}-${r.id}`, []));
+    const seen = new Set();
+    stops = r.zastavky.map(id => m.miesta.find(x => x.id === id)).filter(s => s && !seen.has(s.id) && seen.add(s.id));
+    smalls = (r.drobnosti || []).map(id => m.miesta.find(x => x.id === id)).filter(Boolean);
+    visited = new Set(store.get(visitKey(m, r), []));
+    introDone = visited.size > 0; finished = false; queue = []; current = null; asking = null; dwell = {};
     $('home').hidden = true; $('tour').hidden = false;
     $('tourCity').textContent = m.nazov; $('tourRoute').textContent = r.nazov;
     try { history.replaceState(null, '', '#' + m.id + '/' + r.id); } catch {}
-    setupMap();
-    updateNext();
+    setupMap(); updateNext();
   }
+
+  function decodeTrasa(str, base) {
+    return str.trim().split(/\s+/).map(p => { const [a, b] = p.split(',').map(Number); return [base[0] + a / 1e5, base[1] + b / 1e5]; });
+  }
+  const getVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim() || '#2f7f86';
+  const numOf = (s) => stops.indexOf(s) + 1;
 
   function setupMap() {
     if (!map) {
-      map = L.map('map', { zoomControl: false, attributionControl: true });
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19, subdomains: 'abc',
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-      }).addTo(map);
+      map = L.map('map', { zoomControl: false });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, subdomains: 'abc', attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(map);
       map.on('dragstart', () => setFollow(false));
       map.on('click', (e) => { if (simulate) onPosition({ coords: { latitude: e.latlng.lat, longitude: e.latlng.lng, accuracy: 5 } }); });
     }
     Object.values(markers).forEach(mk => mk.remove()); markers = {};
-    if (line) line.remove();
+    if (line) { line.remove(); line = null; }
     const pts = stops.map(s => [s.lat, s.lon]);
     if (route.id !== 'vsetko') {
-      const loop = route.zastavky.length > 1 && route.zastavky[0] === route.zastavky[route.zastavky.length - 1];
-      line = L.polyline(loop ? [...pts, pts[0]] : pts, { color: getVar('--river'), weight: 3, opacity: .7, dashArray: '6 8' }).addTo(map);
+      const path = route.trasa ? decodeTrasa(route.trasa, city.trasaZaklad || [0, 0]) : pts;
+      line = L.polyline(path, { color: getVar('--river'), weight: 4, opacity: .75, dashArray: route.trasa ? null : '6 8' }).addTo(map);
     }
-    stops.forEach((s, i) => {
-      const icon = L.divIcon({ className: '', html: `<div class="pin${visited.has(s.id) ? ' done' : ''}">${i + 1}</div>`, iconSize: [30, 30], iconAnchor: [15, 15] });
-      markers[s.id] = L.marker([s.lat, s.lon], { icon, title: s.nazov }).addTo(map).on('click', () => { showStory(s, false); });
-    });
-    setTimeout(() => { map.invalidateSize(); map.fitBounds(L.latLngBounds(pts).pad(0.15)); }, 50);
+    smalls.forEach(s => { markers[s.id] = L.marker([s.lat, s.lon], { icon: miniIcon(s), title: s.nazov }).addTo(map).on('click', () => showStory(s, false)); });
+    stops.forEach(s => { markers[s.id] = L.marker([s.lat, s.lon], { icon: pinIcon(s), title: s.nazov, zIndexOffset: 100 }).addTo(map).on('click', () => showStory(s, false)); });
+    setTimeout(() => { map.invalidateSize(); map.fitBounds(L.latLngBounds(pts).pad(0.12)); }, 60);
   }
-
-  function refreshPin(s) {
-    const i = stops.indexOf(s);
-    markers[s.id]?.setIcon(L.divIcon({ className: '', html: `<div class="pin${visited.has(s.id) ? ' done' : ''}${current === s ? ' active' : ''}">${i + 1}</div>`, iconSize: [30, 30], iconAnchor: [15, 15] }));
+  function pinIcon(s) {
+    const n = nextStop();
+    const cls = ['pin', visited.has(s.id) ? 'done' : '', current === s ? 'active' : '', n === s && started ? 'next' : ''].join(' ');
+    return L.divIcon({ className: '', html: `<div class="${cls}">${numOf(s)}</div>`, iconSize: [30, 30], iconAnchor: [15, 15] });
   }
-
-  function getVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || '#2f7f86'; }
+  function miniIcon(s) { return L.divIcon({ className: '', html: `<div class="mini${visited.has(s.id) ? ' done' : ''}"></div>`, iconSize: [14, 14], iconAnchor: [7, 7] }); }
+  function refreshPins() { stops.forEach(s => markers[s.id]?.setIcon(pinIcon(s))); smalls.forEach(s => markers[s.id]?.setIcon(miniIcon(s))); }
 
   /* ---------- GPS ---------- */
   function startTour() {
     started = true;
     $('startPane').hidden = true; $('nextPane').hidden = false;
-    unlockSpeech();
-    requestWake();
-    if (simulate) { setGps('warn', 'Skúšobný režim: ťukni na mapu tam, kde „stojíš“'); return; }
+    unlockSpeech(); requestWake(); startCompass();
+    if (!introDone && route.uvod) { introDone = true; speakSegments([{ text: route.uvod }], { done: () => { if (!current) $('player').hidden = true; } }); }
+    if (simulate) { setGps('warn', 'Skúšobný režim: ťukni na mapu'); return; }
     if (!('geolocation' in navigator)) { setGps('warn', 'Tento prehliadač nevie zistiť polohu'); return; }
     setGps('warn', 'Hľadám polohu…');
     watchId = navigator.geolocation.watchPosition(onPosition, (err) => {
-      const msg = err.code === 1 ? 'Poloha je zakázaná. Povoľ ju v nastaveniach prehliadača.' : 'Nepodarilo sa zistiť polohu, skúšam znova…';
-      setGps('warn', msg);
+      setGps('warn', err.code === 1 ? 'Poloha je zakázaná. Povoľ ju v nastaveniach prehliadača.' : 'Nepodarilo sa zistiť polohu, skúšam znova…');
     }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 });
+    refreshPins();
   }
-
   function setGps(state, text) { $('gpsDot').className = 'dot' + (state === 'live' ? ' live' : state === 'warn' ? ' warn' : ''); $('gpsText').textContent = text; }
 
   function onPosition(p) {
     const { latitude, longitude, accuracy } = p.coords;
     pos = { lat: latitude, lon: longitude, acc: accuracy || 10 };
-    if (!simulate) setGps('live', `Poloha presná na ±${Math.round(pos.acc)} m`);
-    else setGps('warn', 'Skúšobný režim: ťukni na mapu tam, kde „stojíš“');
+    if (p.coords.heading != null && !isNaN(p.coords.heading) && p.coords.speed > 0.6 && heading == null) gpsHeading = p.coords.heading;
+    if (simulate) setGps('warn', 'Skúšobný režim: ťukni na mapu');
+    else setGps(pos.acc <= 35 ? 'live' : 'warn', pos.acc <= 35 ? `Poloha presná na ±${Math.round(pos.acc)} m` : `Slabý signál GPS (±${Math.round(pos.acc)} m)`);
     const ll = [pos.lat, pos.lon];
     if (!meMarker) {
       meMarker = L.marker(ll, { icon: L.divIcon({ className: '', html: '<div class="me"></div>', iconSize: [18, 18], iconAnchor: [9, 9] }), interactive: false, zIndexOffset: 1000 }).addTo(map);
-      meCircle = L.circle(ll, { radius: pos.acc, color: getVar('--me'), weight: 1, fillOpacity: .08 }).addTo(map);
+      meCircle = L.circle(ll, { radius: pos.acc, color: getVar('--me'), weight: 1, fillOpacity: .08, interactive: false }).addTo(map);
     } else { meMarker.setLatLng(ll); meCircle.setLatLng(ll).setRadius(pos.acc); }
     if (following) map.panTo(ll, { animate: true });
-    checkProximity();
+    checkProximity(simulate);
     updateNext();
   }
+  let gpsHeading = null;
 
   function dist(a, b) {
-    const R = 6371000, toR = Math.PI / 180;
-    const dLat = (b.lat - a.lat) * toR, dLon = (b.lon - a.lon) * toR;
-    const x = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * toR) * Math.cos(b.lat * toR) * Math.sin(dLon / 2) ** 2;
+    const R = 6371000, r = Math.PI / 180, dLat = (b.lat - a.lat) * r, dLon = (b.lon - a.lon) * r;
+    const x = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLon / 2) ** 2;
     return 2 * R * Math.asin(Math.sqrt(x));
   }
-
-  function checkProximity() {
-    if (!pos || pos.acc > 80) return; // too imprecise to trust
-    const slack = Math.min(pos.acc, 20);
-    const hits = stops
-      .filter(s => !visited.has(s.id) && current !== s && !queue.includes(s))
-      .map(s => ({ s, d: dist(pos, s) }))
-      .filter(h => h.d <= (h.s.polomer || 35) + slack)
-      .sort((a, b) => a.d - b.d);
-    hits.forEach(h => queue.push(h.s));
-    if (!current && queue.length) showStory(queue.shift(), true);
+  function bearing(a, b) {
+    const r = Math.PI / 180, y = Math.sin((b.lon - a.lon) * r) * Math.cos(b.lat * r);
+    const x = Math.cos(a.lat * r) * Math.sin(b.lat * r) - Math.sin(a.lat * r) * Math.cos(b.lat * r) * Math.cos((b.lon - a.lon) * r);
+    return (Math.atan2(y, x) / r + 360) % 360;
   }
+
+  // Trigger only after two consecutive fixes inside the zone (filters GPS jumps); weak signal => ask instead of auto-play.
+  function checkProximity(instant) {
+    if (!pos || pos.acc > 90) return;
+    const busy = !!current || speaking || asking;
+    const inZone = (s) => dist(pos, s) <= (s.polomer || 35) + Math.min(pos.acc, 15);
+    const cand = stops.filter(s => !visited.has(s.id) && s !== current && !queue.includes(s)).filter(inZone);
+    stops.forEach(s => { if (!cand.includes(s)) dwell[s.id] = 0; });
+    const ready = cand.filter(s => instant || (dwell[s.id] = (dwell[s.id] || 0) + 1) >= 2).sort((a, b) => dist(pos, a) - dist(pos, b));
+    if (ready.length) {
+      const s = ready[0];
+      if (pos.acc > 35 && !instant) { if (!busy) askAbout(s); return; }
+      ready.forEach(x => queue.push(x));
+      if (!busy) showStory(queue.shift(), true);
+      return;
+    }
+    if (!busy && $('smalls').checked) {
+      const sm = smalls.find(s => !visited.has(s.id) && dist(pos, s) <= (s.polomer || 20) + Math.min(pos.acc, 10));
+      if (sm) showStory(sm, true);
+    }
+  }
+  function askAbout(s) {
+    asking = s; $('askPane').hidden = false;
+    $('askText').textContent = `Signál GPS je slabší. Si pri zastávke ${s.nazov}?`;
+  }
+  $('askYes').onclick = () => { const s = asking; asking = null; $('askPane').hidden = true; if (s) showStory(s, true); };
+  $('askNo').onclick = () => { if (asking) dwell[asking.id] = -6; asking = null; $('askPane').hidden = true; };
 
   function nextStop() {
     const left = stops.filter(s => !visited.has(s.id));
@@ -335,128 +420,219 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; text-wrap: balance; 
     if (route.id === 'vsetko' && pos) return left.slice().sort((a, b) => dist(pos, a) - dist(pos, b))[0];
     return left[0];
   }
-
+  function remainingDistance(n) {
+    if (!n || !pos) return null;
+    const left = stops.filter(s => !visited.has(s.id));
+    let d = dist(pos, n), prev = n;
+    if (route.id !== 'vsetko') left.slice(left.indexOf(n) + 1).forEach(s => { d += dist(prev, s) * 1.25; prev = s; });
+    return d;
+  }
   function updateNext() {
     const n = nextStop();
-    if (!n) { $('nextNum').textContent = '✓'; $('nextName').textContent = 'Okruh je hotový. Pekná prechádzka!'; $('nextDist').textContent = ''; return; }
-    $('nextNum').textContent = stops.indexOf(n) + 1;
-    $('nextName').textContent = n.nazov;
+    const total = stops.length, done = stops.filter(s => visited.has(s.id)).length;
+    $('prog').textContent = `${done}/${total}` + (pos && n && route.id !== 'vsetko' ? ` · zostáva ~${fmtDist(remainingDistance(n))}` : '');
+    if (!n) { $('nextNum').textContent = '✓'; $('nextLabel').textContent = 'Hotovo'; $('nextName').textContent = 'Okruh je prejdený. Pekná prechádzka!'; $('nextDist').textContent = ''; $('arrow').style.visibility = 'hidden'; return; }
+    $('nextNum').textContent = numOf(n); $('nextLabel').textContent = 'Ďalšia zastávka'; $('nextName').textContent = n.nazov;
     if (pos) {
-      const d = dist(pos, n);
-      $('nextDist').textContent = d < 1000 ? `${Math.round(d / 10) * 10} m` : `${(d / 1000).toFixed(1).replace('.', ',')} km`;
-    } else $('nextDist').textContent = '–';
+      $('nextDist').textContent = fmtDist(dist(pos, n));
+      const h = heading ?? gpsHeading;
+      const b = bearing(pos, n);
+      $('arrow').style.visibility = 'visible';
+      $('arrow').style.transform = `rotate(${h == null ? b : b - h}deg)`;
+      $('arrow').title = h == null ? 'Smer podľa svetových strán (hore = sever)' : 'Smer podľa toho, kam sa pozeráš';
+    } else { $('nextDist').textContent = '–'; $('arrow').style.visibility = 'hidden'; }
+    refreshPins();
   }
-
+  function startCompass() {
+    const handler = (e) => {
+      let h = null;
+      if (typeof e.webkitCompassHeading === 'number') h = e.webkitCompassHeading;
+      else if (e.absolute && e.alpha != null) h = 360 - e.alpha;
+      if (h != null) { heading = (h + (screen.orientation?.angle || 0)) % 360; if (pos) updateArrowOnly(); }
+    };
+    try {
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission().then(st => { if (st === 'granted') addEventListener('deviceorientation', handler, true); }).catch(() => {});
+      } else if ('ondeviceorientationabsolute' in window) addEventListener('deviceorientationabsolute', handler, true);
+      else addEventListener('deviceorientation', handler, true);
+    } catch {}
+  }
+  let arrowRaf = 0;
+  function updateArrowOnly() { if (arrowRaf) return; arrowRaf = requestAnimationFrame(() => { arrowRaf = 0; const n = nextStop(); if (n && pos && heading != null) $('arrow').style.transform = `rotate(${bearing(pos, n) - heading}deg)`; }); }
   function setFollow(on) { following = on; $('follow').classList.toggle('on', on); if (on && pos) map.panTo([pos.lat, pos.lon]); }
-
-  async function requestWake() {
-    try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } catch {}
-  }
+  async function requestWake() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch {} }
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && started) requestWake(); });
 
-  /* ---------- Story + speech ---------- */
-  let voice = null, sentences = [], sIdx = 0, speaking = false, paused = false;
-  function pickVoice() {
-    const vs = speechSynthesis.getVoices();
-    voice = vs.find(v => /^sk/i.test(v.lang)) || vs.find(v => /^cs/i.test(v.lang)) || null;
+  /* ---------- Speech ---------- */
+  let voices = [], voice = null, segs = [], segIdx = 0, sentIdx = 0, speaking = false, paused = false, onDone = null, sentNodes = [];
+  function voiceScore(v) {
+    let s = 0;
+    if (/^sk/i.test(v.lang)) s += 100; else if (/^cs/i.test(v.lang)) s += 50; else return -1;
+    if (/premium|prémiov|enhanced|vylepšen|neural|natural|online|google/i.test(v.name)) s += 20;
+    if (v.localService === false) s += 5;
+    return s;
   }
-  if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
-
-  function unlockSpeech() {
-    // iOS needs the first utterance to come from a tap
+  function loadVoices() {
     if (!('speechSynthesis' in window)) return;
-    const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u);
+    voices = speechSynthesis.getVoices().filter(v => voiceScore(v) >= 0).sort((a, b) => voiceScore(b) - voiceScore(a));
+    const sel = $('voiceSel'); sel.innerHTML = '';
+    if (!voices.length) { sel.innerHTML = '<option>Predvolený hlas telefónu</option>'; $('voiceHint').textContent = 'Slovenský ani český hlas sa nenašiel. Pozri návod na úvodnej obrazovke.'; voice = null; return; }
+    voices.forEach((v, i) => { const o = document.createElement('option'); o.value = v.voiceURI; o.textContent = `${v.name} (${v.lang})`; sel.appendChild(o); });
+    voice = voices.find(v => v.voiceURI === settings.voice) || voices[0];
+    sel.value = voice.voiceURI;
+    $('voiceHint').textContent = /premium|prémiov|enhanced|vylepšen|neural|natural|google/i.test(voice.name) ? '' : 'Tip: kvalitnejší hlas si stiahneš v nastaveniach telefónu, návod je na úvodnej obrazovke.';
   }
+  if ('speechSynthesis' in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+  $('voiceSel').onchange = () => { voice = voices.find(v => v.voiceURI === $('voiceSel').value) || voice; settings.voice = voice?.voiceURI || ''; saveSettings(); };
+  function unlockSpeech() { if (!('speechSynthesis' in window)) return; const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); }
+  const splitSentences = (t) => t.match(/[^.!?]+[.!?]+["“”]?\s*|[^.!?]+$/g) || [t];
 
-  function showStory(s, auto) {
-    current = s;
-    if (auto) { visited.add(s.id); store.set(`ts-visited-${city.id}-${route.id}`, [...visited]); }
-    stops.forEach(refreshPin);
-    $('story').hidden = false; $('player').hidden = false;
-    $('storyKicker').textContent = `Zastávka ${stops.indexOf(s) + 1} z ${stops.length}`;
-    $('storyTitle').textContent = s.nazov;
-    sentences = s.text.match(/[^.!?]+[.!?]+["“”]?\s*/g) || [s.text];
-    const p = $('storyText'); p.innerHTML = '';
-    sentences.forEach((t, i) => { const sp = document.createElement('span'); sp.className = 'sentence'; sp.dataset.i = i; sp.textContent = t; p.appendChild(sp); });
-    const tip = $('storyTip'); tip.hidden = !s.tip; if (s.tip) tip.querySelector('span').textContent = s.tip;
-    $('story').scrollTop = 0;
-    map.panTo([s.lat, s.lon]);
-    if (navigator.vibrate && auto) navigator.vibrate([120, 60, 120]);
-    if (auto && !$('auto').checked) { setPlayLabel(false); return; }
-    speakFrom(0);
+  // segs: [{ text, node? (element whose sentences get highlighted) }]
+  function speakSegments(list, opts = {}) {
+    if (!('speechSynthesis' in window)) { toast('Tento prehliadač nevie čítať nahlas'); opts.done && opts.done(); return; }
+    speechSynthesis.cancel();
+    segs = list.map(s => ({ ...s, sentences: splitSentences(s.text) }));
+    segIdx = 0; sentIdx = 0; onDone = opts.done || null; paused = false; speaking = true;
+    $('player').hidden = false; setPlayLabel(true);
+    sayNext();
   }
-
-  function speakFrom(i) {
-    if (!('speechSynthesis' in window)) { toast('Tento prehliadač nevie čítať nahlas'); return; }
-    speechSynthesis.cancel(); sIdx = i; speaking = true; paused = false; setPlayLabel(true);
-    // short chunks avoid Chrome cutting long utterances
-    const say = () => {
-      if (!speaking || sIdx >= sentences.length) { speaking = false; highlight(-1); setPlayLabel(false); return; }
-      const u = new SpeechSynthesisUtterance(sentences[sIdx].trim());
-      u.lang = voice ? voice.lang : 'sk-SK'; if (voice) u.voice = voice; u.rate = +$('rate').value;
-      highlight(sIdx);
-      u.onend = () => { if (speaking && !paused) { sIdx++; say(); } };
-      u.onerror = (e) => { if (e.error !== 'interrupted' && e.error !== 'canceled') { sIdx++; say(); } };
-      speechSynthesis.speak(u);
-    };
-    say();
+  function sayNext() {
+    if (!speaking) return;
+    while (segIdx < segs.length && sentIdx >= segs[segIdx].sentences.length) { segIdx++; sentIdx = 0; }
+    if (segIdx >= segs.length) { speaking = false; highlight(null); setPlayLabel(false); const d = onDone; onDone = null; d && d(); return; }
+    const seg = segs[segIdx], t = seg.sentences[sentIdx].trim();
+    highlight(seg.node ? seg.node.querySelectorAll('.sentence')[sentIdx] : null);
+    if (!t) { sentIdx++; return sayNext(); }
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang = voice ? voice.lang : 'sk-SK'; if (voice) u.voice = voice; u.rate = +$('rate').value;
+    const my = u;
+    u.onend = () => { if (speaking && !paused && current_u === my) { sentIdx++; sayNext(); } };
+    u.onerror = (e) => { if (speaking && !paused && current_u === my && e.error !== 'interrupted' && e.error !== 'canceled') { sentIdx++; sayNext(); } };
+    current_u = u;
+    speechSynthesis.speak(u);
   }
-  function highlight(i) { document.querySelectorAll('.sentence').forEach(el => el.classList.toggle('now', +el.dataset.i === i)); }
-  function setPlayLabel(isPlaying) { $('playBtn').textContent = isPlaying ? '⏸ Pauza' : '▶ Prečítať'; }
+  let current_u = null;
+  function stopSpeech() { speaking = false; paused = false; current_u = null; try { speechSynthesis.cancel(); } catch {} highlight(null); setPlayLabel(false); }
+  function highlight(node) { document.querySelectorAll('.sentence.now').forEach(el => el.classList.remove('now')); if (node) { node.classList.add('now'); node.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } }
+  function setPlayLabel(on) { $('playBtn').textContent = on ? '⏸ Pauza' : '▶ Prehrať'; }
+  function fillSentences(el, text) {
+    el.innerHTML = '';
+    splitSentences(text).forEach(t => { const sp = document.createElement('span'); sp.className = 'sentence'; sp.textContent = t; el.appendChild(sp); });
+  }
 
   $('playBtn').onclick = () => {
-    if (speaking && !paused) { paused = true; speaking = false; speechSynthesis.cancel(); setPlayLabel(false); }
-    else if (paused) speakFrom(sIdx);
-    else speakFrom(0);
+    if (speaking && !paused) { paused = true; current_u = null; speechSynthesis.cancel(); setPlayLabel(false); return; }
+    if (paused && segs.length) { paused = false; speaking = true; setPlayLabel(true); sayNext(); return; }
+    if (current) playStory(current, false);
+  };
+  $('prevBtn').onclick = () => {
+    if (!segs.length) return;
+    if (sentIdx > 0) sentIdx--; else if (segIdx > 0) { segIdx--; sentIdx = Math.max(0, segs[segIdx].sentences.length - 1); }
+    paused = false; speaking = true; current_u = null; speechSynthesis.cancel(); setPlayLabel(true); sayNext();
+  };
+  $('skipBtn').onclick = () => { // jump to next segment (e.g. skip the story, go to directions)
+    if (!segs.length) return;
+    segIdx++; sentIdx = 0; paused = false; speaking = true; current_u = null; speechSynthesis.cancel(); setPlayLabel(true); sayNext();
+  };
+
+  /* ---------- Story ---------- */
+  function showStory(s, auto) {
+    if (current && current !== s) { stopSpeech(); }
+    current = s; asking = null; $('askPane').hidden = true;
+    const small = s.typ === 'drobnost';
+    if (auto) { visited.add(s.id); store.set(visitKey(city, route), [...visited]); }
+    $('story').hidden = false; $('player').hidden = false; $('sheet').classList.add('tall');
+    $('storyKicker').className = 'kicker' + (small ? ' small' : '');
+    $('storyKicker').textContent = small ? 'Drobnosť po ceste' : (stops.includes(s) ? `Zastávka ${numOf(s)} z ${stops.length}` : 'Zastávka');
+    $('storyTitle').textContent = s.nazov;
+    fillSentences($('storyText'), s.text);
+    const look = $('storyLook'); look.innerHTML = '';
+    if (s.pozri && s.pozri.length) {
+      const h = document.createElement('li'); h.className = 'lh'; h.textContent = 'Kam sa pozrieť'; look.appendChild(h);
+      s.pozri.forEach(t => { const li = document.createElement('li'); li.textContent = t; look.appendChild(li); });
+      look.hidden = false;
+    } else look.hidden = true;
+    $('moreBtn').hidden = !s.viac; $('more').hidden = true;
+    if (s.viac) fillSentences($('moreText'), s.viac);
+    const tip = $('storyTip'); tip.hidden = !s.tip; if (s.tip) tip.querySelector('span').textContent = s.tip;
+    const info = $('storyInfo'); info.hidden = !s.info; if (s.info) info.querySelector('span').textContent = s.info;
+    $('report').href = `${REPO}?title=${encodeURIComponent('Chyba: ' + city.nazov + ' – ' + s.nazov)}&body=${encodeURIComponent('Čo je zle:\n\nAko by to malo byť:\n')}`;
+    $('story').scrollTop = 0;
+    $('closeStory').textContent = 'Ďalej';
+    map.panTo([s.lat, s.lon]); setFollow(false); setTimeout(() => setFollow(true), 15000);
+    refreshPins();
+    if (navigator.vibrate && auto) navigator.vibrate(small ? [80] : [120, 60, 120]);
+    if (auto && !$('auto').checked) { setPlayLabel(false); return; }
+    playStory(s, auto);
+  }
+  function transitionFor(s) {
+    if (!route.cestou || s.typ === 'drobnost') return null;
+    const left = stops.filter(x => !visited.has(x.id) && x !== s);
+    if (!left.length && route.zaver && visited.has(s.id)) return { text: route.zaver, final: true };
+    return route.cestou[s.id] ? { text: route.cestou[s.id] } : null;
+  }
+  function playStory(s, auto) {
+    const list = [{ text: s.text, node: $('storyText') }];
+    const tr = transitionFor(s);
+    if (tr) list.push({ text: tr.text });
+    speakSegments(list, { done: () => { if (tr && tr.final) finished = true; } });
+  }
+  $('moreBtn').onclick = () => {
+    const s = current; if (!s || !s.viac) return;
+    $('more').hidden = false; $('moreBtn').hidden = true;
+    $('more').scrollIntoView({ block: 'start', behavior: 'smooth' });
+    const list = [{ text: s.viac, node: $('moreText') }];
+    const tr = transitionFor(s); if (tr) list.push({ text: tr.text });
+    speakSegments(list);
   };
   $('closeStory').onclick = () => {
-    speaking = false; paused = false; speechSynthesis?.cancel(); highlight(-1);
-    $('story').hidden = true; $('player').hidden = true;
-    const was = current; current = null; if (was) refreshPin(was);
-    updateNext();
+    stopSpeech();
+    $('story').hidden = true; $('player').hidden = true; $('sheet').classList.remove('tall');
+    current = null; segs = [];
+    updateNext(); setFollow(true);
     if (queue.length) showStory(queue.shift(), true);
   };
 
-  function toast(t) { const el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 3200); }
+  function toast(t) { const el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 3500); }
 
   /* ---------- Controls ---------- */
   $('startBtn').onclick = startTour;
   $('follow').onclick = () => setFollow(!following);
   $('back').onclick = () => {
-    speaking = false; speechSynthesis?.cancel();
+    stopSpeech();
     if (watchId != null) navigator.geolocation.clearWatch(watchId); watchId = null;
     try { wakeLock?.release(); } catch {}
-    started = false; current = null; queue = []; pos = null;
+    started = false; current = null; queue = []; pos = null; asking = null;
     if (meMarker) { meMarker.remove(); meCircle.remove(); meMarker = meCircle = null; }
-    $('story').hidden = true; $('player').hidden = true; $('startPane').hidden = false; $('nextPane').hidden = true; setGps('', 'GPS je vypnuté');
-    $('tour').hidden = true; $('home').hidden = false; $('menu').hidden = true;
+    ['story', 'player', 'nextPane', 'askPane', 'menu'].forEach(id => $(id).hidden = true);
+    $('startPane').hidden = false; $('sheet').classList.remove('tall'); setGps('', 'GPS je vypnuté'); $('prog').textContent = '';
+    $('tour').hidden = true; $('home').hidden = false; renderHome();
     try { history.replaceState(null, '', location.pathname); } catch {}
   };
-  $('menuBtn').onclick = () => { const m = $('menu'); m.hidden = !m.hidden; $('menuBtn').setAttribute('aria-expanded', String(!m.hidden)); };
-  $('rate').oninput = () => { settings.rate = +$('rate').value; store.set('ts-settings', settings); };
-  $('auto').onchange = () => { settings.auto = $('auto').checked; store.set('ts-settings', settings); };
+  $('menuBtn').onclick = () => { const m = $('menu'); m.hidden = !m.hidden; $('menuBtn').setAttribute('aria-expanded', String(!m.hidden)); if (!m.hidden) loadVoices(); };
+  $('rate').oninput = () => { settings.rate = +$('rate').value; saveSettings(); };
+  $('auto').onchange = () => { settings.auto = $('auto').checked; saveSettings(); };
+  $('smalls').onchange = () => { settings.smalls = $('smalls').checked; saveSettings(); };
   $('simBtn').onclick = () => {
     simulate = !simulate; $('simState').textContent = simulate ? 'zap.' : 'vyp.';
-    if (simulate) { if (watchId != null) navigator.geolocation.clearWatch(watchId); watchId = null; toast('Ťukni na mapu, sprievodca sa bude tváriť, že tam stojíš.'); if (started) setGps('warn', 'Skúšobný režim: ťukni na mapu tam, kde „stojíš“'); }
-    else if (started) { startTour(); }
+    if (simulate) { if (watchId != null) navigator.geolocation.clearWatch(watchId); watchId = null; toast('Ťukni na mapu a sprievodca sa bude tváriť, že tam stojíš.'); if (started) setGps('warn', 'Skúšobný režim: ťukni na mapu'); }
+    else if (started) startTour();
     $('menu').hidden = true;
   };
-  $('resetBtn').onclick = () => { visited.clear(); store.set(`ts-visited-${city.id}-${route.id}`, []); queue = []; stops.forEach(refreshPin); updateNext(); $('menu').hidden = true; toast('Okruh začína odznova.'); };
+  $('resetBtn').onclick = () => { visited.clear(); store.set(visitKey(city, route), []); queue = []; introDone = false; finished = false; refreshPins(); updateNext(); $('menu').hidden = true; toast('Okruh začína odznova.'); };
   $('testVoice').onclick = () => {
-    $('menu').hidden = true;
-    if (!('speechSynthesis' in window)) return toast('Tento prehliadač nevie čítať nahlas');
-    pickVoice();
-    const u = new SpeechSynthesisUtterance('Ahoj, som tvoj sprievodca. Takto budem čítať.');
-    u.lang = voice ? voice.lang : 'sk-SK'; if (voice) u.voice = voice; u.rate = +$('rate').value;
-    speechSynthesis.cancel(); speechSynthesis.speak(u);
+    $('menu').hidden = true; unlockSpeech();
+    speakSegments([{ text: 'Ahoj, som tvoj sprievodca. Takto budem rozprávať.' }], { done: () => { if (!current) $('player').hidden = true; } });
     toast(voice ? `Hlas: ${voice.name}` : 'Slovenský hlas sa nenašiel, použije sa predvolený.');
   };
 
   renderHome();
-  // deep link: #cesky-krumlov/klasika
   const [cid, rid] = decodeURIComponent(location.hash.slice(1)).split('/');
   const m = MESTA.find(x => x.id === cid);
   if (m) { const r = allRoutes(m).find(x => x.id === rid) || m.okruhy[0]; openTour(m, r); }
+
+  // test hook
+  window.__sprievodca = { get state() { return { current: current && current.id, visited: [...visited], queue: queue.map(q => q.id), asking: asking && asking.id, speaking, segs: segs.map(s => s.text.slice(0, 40)) }; } };
 })();
 </script>
 </body>
