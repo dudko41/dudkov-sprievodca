@@ -70,6 +70,21 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; text-wrap: balance; 
 .route .p { color: var(--river); font-size: 13px; font-weight: 700; grid-column: 1; }
 .route .go { grid-row: 1 / span 3; grid-column: 2; color: var(--accent); font-weight: 700; font-size: 22px; }
 .route:hover { border-color: var(--river); }
+.picker { display: flex; flex-direction: column; gap: 10px; }
+.picker-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.picker-head h2 { font-size: 15px; font-family: var(--body); font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.linkbtn { background: none; border: 0; color: var(--river); font-weight: 700; font-size: 15px; padding: 6px 0; }
+.citylist { display: flex; gap: 8px; flex-wrap: wrap; list-style: none; margin: 0; padding: 0; }
+.citylist.edit { flex-direction: column; flex-wrap: nowrap; }
+.cchip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 8px 14px; font-size: 16px; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; }
+.cchip small { font-size: 12px; }
+.cchip small { color: var(--muted); font-size: 13px; }
+.cchip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.cchip[aria-pressed="true"] small { color: inherit; opacity: .75; }
+.erow { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 6px 6px 6px 14px; }
+.erow span { flex: 1; min-width: 0; font-weight: 700; }
+.erow button { width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); font-size: 18px; }
+.erow button:disabled { opacity: .35; cursor: default; }
 .notes { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; font-size: 15px; }
 .notes h3 { font-size: 18px; }
 .notes ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
@@ -168,6 +183,10 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; text-wrap: balance; 
     <h1>Dudkov sprievodca</h1>
     <p>Vyber mesto a okruh. Choď s telefónom v ruke a keď prídeš k pamiatke, sprievodca ti o nej sám porozpráva.</p>
   </div>
+  <section class="picker">
+    <div class="picker-head"><h2>Moje mestá</h2><button class="linkbtn" id="editCities">Upraviť poradie</button></div>
+    <ul class="citylist" id="cityList"></ul>
+  </section>
   <div id="cities"></div>
   <section class="notes">
     <h3>Pred prechádzkou</h3>
@@ -252,6 +271,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; text-wrap: balance; 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="mesta.js"></script>
 <script src="praha.js"></script>
+<script src="viden.js"></script>
 <script>
 (() => {
   const $ = (id) => document.getElementById(id);
@@ -266,9 +286,47 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; text-wrap: balance; 
   const visitKey = (m, r) => `ts-visited-${m.id}-${r.id}`;
 
   /* ---------- Home ---------- */
+  let editing = false;
+  function cityOrder() {
+    const saved = store.get('ts-order', []);
+    const ids = MESTA.map(m => m.id);
+    return [...saved.filter(id => ids.includes(id)), ...ids.filter(id => !saved.includes(id))];
+  }
+  function selectedCity() {
+    const order = cityOrder(), sel = store.get('ts-city', null);
+    return MESTA.find(m => m.id === (order.includes(sel) ? sel : order[0]));
+  }
+  function renderPicker() {
+    const list = $('cityList'); list.innerHTML = ''; list.classList.toggle('edit', editing);
+    $('editCities').textContent = editing ? 'Hotovo' : 'Upraviť poradie';
+    const order = cityOrder(), sel = selectedCity();
+    order.forEach((id, i) => {
+      const m = MESTA.find(x => x.id === id); const li = document.createElement('li');
+      if (editing) {
+        li.className = 'erow';
+        li.innerHTML = '<span></span><button aria-label="Posunúť vyššie">↑</button><button aria-label="Posunúť nižšie">↓</button>';
+        li.querySelector('span').textContent = m.nazov;
+        const [up, down] = li.querySelectorAll('button');
+        up.disabled = i === 0; down.disabled = i === order.length - 1;
+        const move = (d) => { const o = cityOrder(); [o[i], o[i + d]] = [o[i + d], o[i]]; store.set('ts-order', o); renderHome(); };
+        up.onclick = () => move(-1); down.onclick = () => move(1);
+      } else {
+        const b = document.createElement('button'); b.className = 'cchip'; b.setAttribute('aria-pressed', String(m === sel));
+        b.innerHTML = '<span></span><small></small>';
+        b.querySelector('span').textContent = m.nazov;
+        b.querySelector('small').textContent = `${m.okruhy.length} okruhy`;
+        b.onclick = () => { store.set('ts-city', m.id); renderHome(); };
+        li.appendChild(b);
+      }
+      list.appendChild(li);
+    });
+  }
+  $('editCities').onclick = () => { editing = !editing; renderHome(); };
+
   function renderHome() {
+    renderPicker();
     const wrap = $('cities'); wrap.innerHTML = '';
-    MESTA.forEach(m => {
+    [selectedCity()].filter(Boolean).forEach(m => {
       const el = document.createElement('section'); el.className = 'city';
       el.innerHTML = `<header><h2></h2><div class="meta"></div></header><p></p><div class="routes"></div>`;
       el.querySelector('h2').textContent = m.nazov;
@@ -282,10 +340,11 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; text-wrap: balance; 
         b.querySelector('strong').textContent = r.nazov;
         b.querySelector('.d').textContent = [r.cas, r.dlzka].filter(Boolean).join(' · ') + ' — ' + r.popis;
         const v = store.get(visitKey(m, r), []).filter(id => r.zastavky.includes(id)).length;
-        if (v && r.id !== 'vsetko') { const p = b.querySelector('.p'); p.hidden = false; p.textContent = v >= r.zastavky.length ? 'Dokončené ✓' : `Rozpracované: ${v} z ${new Set(r.zastavky).size}. Pokračuj, kde si skončil.`; }
+        if (v && r.id !== 'vsetko') { const p = b.querySelector('.p'); p.hidden = false; p.textContent = v >= new Set(r.zastavky).size ? 'Dokončené ✓' : `Rozpracované: ${v} z ${new Set(r.zastavky).size}. Pokračuj, kde si skončil.`; }
         b.onclick = () => openTour(m, r);
         routes.appendChild(b);
       });
+      if (m.poznamka) { const n = document.createElement('p'); n.className = 'info'; n.textContent = m.poznamka; el.appendChild(n); }
       wrap.appendChild(el);
     });
   }
@@ -299,7 +358,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; text-wrap: balance; 
   const saveSettings = () => store.set('ts-settings', settings);
 
   function openTour(m, r) {
-    city = m; route = r;
+    city = m; route = r; store.set('ts-city', m.id);
     const seen = new Set();
     stops = r.zastavky.map(id => m.miesta.find(x => x.id === id)).filter(s => s && !seen.has(s.id) && seen.add(s.id));
     smalls = (r.drobnosti || []).map(id => m.miesta.find(x => x.id === id)).filter(Boolean);
