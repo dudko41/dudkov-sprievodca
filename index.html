@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#16302e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Dudkov sprievodca</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Young+Serif&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+/* Layout: map-first one-screen app; a bottom sheet carries the story, a top bar the route. */
+:root {
+  --ink: #16302e;        /* deep river green */
+  --paper: #f7f6f2;
+  --surface: #ffffff;
+  --muted: #5d6d6a;
+  --line: #dfe3df;
+  --accent: #b5462f;     /* Rožmberk rose red */
+  --accent-ink: #ffffff;
+  --river: #2f7f86;
+  --done: #7c8a87;
+  --me: #1a73e8;
+  --shadow: 0 -6px 24px rgba(10, 30, 28, .14);
+  --display: "Young Serif", Georgia, "Times New Roman", serif;
+  --body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #e7efec; --paper: #0f1a19; --surface: #182524; --muted: #9db0ac; --line: #2b3b39;
+    --accent: #e0745b; --accent-ink: #1a0f0c; --river: #6cc0c6; --done: #6d7f7b; --me: #6ea8ff;
+    --shadow: 0 -6px 24px rgba(0,0,0,.5); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ink: #e7efec; --paper: #0f1a19; --surface: #182524; --muted: #9db0ac; --line: #2b3b39;
+  --accent: #e0745b; --accent-ink: #1a0f0c; --river: #6cc0c6; --done: #6d7f7b; --me: #6ea8ff;
+  --shadow: 0 -6px 24px rgba(0,0,0,.5); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--paper); color: var(--ink); font: 17px/1.5 var(--body); -webkit-text-size-adjust: 100%; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, a:focus-visible { outline: 3px solid var(--river); outline-offset: 2px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 400; text-wrap: balance; margin: 0; line-height: 1.15; }
+[hidden] { display: none !important; }
+
+/* ---------- Home ---------- */
+#home { min-height: 100%; padding: max(24px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 32px max(16px, env(safe-area-inset-left)); max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+.brand { display: flex; flex-direction: column; gap: 6px; }
+.brand small { text-transform: uppercase; letter-spacing: .12em; font-size: 12px; color: var(--muted); font-weight: 700; }
+.brand h1 { font-size: 36px; }
+.brand p { margin: 0; color: var(--muted); max-width: 52ch; }
+.city { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.city header { display: flex; flex-direction: column; gap: 4px; }
+.city h2 { font-size: 26px; }
+.city .meta { color: var(--muted); font-size: 14px; }
+.city p { margin: 0; }
+.routes { display: flex; flex-direction: column; gap: 10px; }
+.route { text-align: left; border: 1px solid var(--line); background: var(--paper); border-radius: 10px; padding: 12px 14px; display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: center; }
+.route strong { font-size: 17px; }
+.route span { color: var(--muted); font-size: 14px; grid-column: 1; }
+.route .go { grid-row: 1 / span 2; grid-column: 2; color: var(--accent); font-weight: 700; font-size: 22px; }
+.route:hover { border-color: var(--river); }
+.hint { color: var(--muted); font-size: 14px; margin: 0; }
+
+/* ---------- Map screen ---------- */
+#tour { position: fixed; inset: 0; display: flex; flex-direction: column; }
+.mapwrap { flex: 1; min-height: 0; position: relative; }
+#map { position: absolute; inset: 0; background: var(--paper); }
+.topbar { position: absolute; z-index: 500; top: 0; left: 0; right: 0; padding: calc(env(safe-area-inset-top, 0px) + 10px) max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left)); display: flex; gap: 8px; align-items: center; pointer-events: none; }
+.topbar > * { pointer-events: auto; }
+.chip { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; box-shadow: 0 2px 10px rgba(0,0,0,.12); font-size: 15px; line-height: 1.2; min-height: 40px; display: inline-flex; align-items: center; gap: 6px; }
+.chip.title { flex: 1; min-width: 0; overflow: hidden; }
+.chip.title span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip.title b { font-family: var(--display); font-weight: 400; }
+.chip.icon { width: 40px; padding: 0; justify-content: center; font-size: 18px; }
+.fab { position: absolute; z-index: 500; right: max(12px, env(safe-area-inset-right)); width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink); box-shadow: 0 2px 10px rgba(0,0,0,.18); font-size: 20px; display: grid; place-items: center; }
+.fab.on { background: var(--me); color: #fff; border-color: transparent; }
+
+/* Bottom sheet */
+.sheet { position: relative; z-index: 600; background: var(--surface); box-shadow: var(--shadow); border-radius: 18px 18px 0 0; padding: 10px max(16px, env(safe-area-inset-right)) calc(env(safe-area-inset-bottom, 0px) + 14px) max(16px, env(safe-area-inset-left)); display: flex; flex-direction: column; gap: 12px; max-height: 62vh; }
+.grab { width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto; border: 0; padding: 0; }
+.status { display: flex; align-items: center; gap: 10px; font-size: 15px; color: var(--muted); }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--done); flex: none; }
+.dot.live { background: #2e9d5b; box-shadow: 0 0 0 4px rgba(46,157,91,.2); }
+.dot.warn { background: #d08a1c; }
+.next { display: flex; align-items: center; gap: 12px; }
+.next .num { flex: none; }
+.next .txt { flex: 1; min-width: 0; }
+.next .txt strong { display: block; font-family: var(--display); font-weight: 400; font-size: 19px; line-height: 1.2; }
+.next .txt span { color: var(--muted); font-size: 14px; }
+.dist { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--river); white-space: nowrap; }
+.num { width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 700; font-size: 14px; border: 2px solid var(--surface); }
+.num.done { background: var(--done); }
+.btn { border: 0; border-radius: 12px; padding: 14px 18px; font-weight: 700; background: var(--accent); color: var(--accent-ink); min-height: 50px; }
+.btn.secondary { background: var(--paper); color: var(--ink); border: 1px solid var(--line); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+.row .btn { flex: 1; }
+
+.story { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.story h2 { font-size: 24px; }
+.story .kicker { text-transform: uppercase; letter-spacing: .1em; font-size: 12px; font-weight: 700; color: var(--accent); }
+.story p { margin: 0; max-width: 65ch; }
+.story .tip { background: var(--paper); border-radius: 10px; padding: 10px 12px; font-size: 15px; }
+.story .tip b { color: var(--river); }
+.sentence.now { background: color-mix(in srgb, var(--river) 18%, transparent); border-radius: 3px; }
+.player { display: flex; gap: 8px; }
+.player .btn { flex: 1; padding: 12px; }
+
+/* Menu */
+.menu { position: absolute; z-index: 700; top: calc(env(safe-area-inset-top, 0px) + 58px); right: max(12px, env(safe-area-inset-right)); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 8px 30px rgba(0,0,0,.2); padding: 8px; width: min(300px, calc(100vw - 24px)); display: flex; flex-direction: column; }
+.menu button, .menu label { background: none; border: 0; text-align: left; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 16px; }
+.menu button:hover { background: var(--paper); }
+.menu .sep { height: 1px; background: var(--line); margin: 4px 0; }
+.menu input[type=range] { width: 110px; }
+.toast { position: absolute; z-index: 800; left: 50%; transform: translateX(-50%); top: calc(env(safe-area-inset-top, 0px) + 64px); background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 10px; font-size: 15px; max-width: calc(100vw - 32px); text-align: center; }
+
+/* Leaflet markers */
+.pin { width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font: 700 14px var(--body); border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
+.pin.done { background: var(--done); }
+.pin.active { outline: 3px solid var(--river); outline-offset: 2px; }
+.me { width: 18px; height: 18px; border-radius: 50%; background: var(--me); border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(26,115,232,.25); }
+.leaflet-container { font: inherit; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+
+<main id="home">
+  <div class="brand">
+    <small>Prechádzky s hlasovým sprievodcom</small>
+    <h1>Dudkov sprievodca</h1>
+    <p>Vyber mesto a okruh. Choď s telefónom v ruke a keď prídeš k pamiatke, sprievodca ti o nej sám porozpráva.</p>
+  </div>
+  <div id="cities"></div>
+  <p class="hint">Tip: pred odchodom si stránku pridaj na plochu telefónu (Zdieľať → Pridať na plochu). Počas prechádzky nechaj obrazovku zapnutú.</p>
+</main>
+
+<section id="tour" hidden>
+  <div class="mapwrap">
+  <div id="map" aria-label="Mapa"></div>
+  <div class="topbar">
+    <button class="chip icon" id="back" aria-label="Späť na výber">←</button>
+    <div class="chip title"><span><b id="tourCity"></b> · <span id="tourRoute"></span></span></div>
+    <button class="chip icon" id="menuBtn" aria-label="Nastavenia" aria-expanded="false">⋯</button>
+  </div>
+  <button class="fab" id="follow" aria-label="Sledovať moju polohu" style="bottom: 40px">◎</button>
+
+  <div class="menu" id="menu" hidden>
+    <label for="rate">Rýchlosť čítania <input type="range" id="rate" min="0.7" max="1.4" step="0.05" value="1"></label>
+    <label for="auto">Čítať automaticky <input type="checkbox" id="auto" checked></label>
+    <div class="sep"></div>
+    <button id="simBtn">Skúšobný režim (ťuknutím na mapu) <span id="simState">vyp.</span></button>
+    <button id="resetBtn">Začať okruh odznova</button>
+    <button id="testVoice">Vyskúšať hlas</button>
+  </div>
+  <div class="toast" id="toast" hidden></div>
+  </div>
+
+  <div class="sheet" id="sheet">
+    <div class="grab" aria-hidden="true"></div>
+    <div class="status"><span class="dot" id="gpsDot"></span><span id="gpsText">GPS je vypnuté</span></div>
+
+    <div id="startPane" class="row">
+      <button class="btn" id="startBtn">Spustiť prechádzku</button>
+    </div>
+
+    <div id="nextPane" class="next" hidden>
+      <div class="num" id="nextNum">1</div>
+      <div class="txt"><span>Ďalšia zastávka</span><strong id="nextName"></strong></div>
+      <div class="dist" id="nextDist">–</div>
+    </div>
+
+    <article class="story" id="story" hidden>
+      <div class="kicker" id="storyKicker"></div>
+      <h2 id="storyTitle"></h2>
+      <p id="storyText"></p>
+      <p class="tip" id="storyTip" hidden><b>Tip:</b> <span></span></p>
+    </article>
+    <div class="player" id="player" hidden>
+      <button class="btn secondary" id="playBtn">⏸ Pauza</button>
+      <button class="btn secondary" id="closeStory">Zavrieť</button>
+    </div>
+  </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="mesta.js"></script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const MESTA = window.MESTA || [];
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+  };
+
+  const allRoutes = (m) => [...m.okruhy, { id: 'vsetko', nazov: 'Voľná prechádzka', popis: 'Bez poradia. Sprievodca sa ozve pri každej pamiatke, ku ktorej prídeš.', cas: 'koľko chceš', dlzka: '', zastavky: m.miesta.map(x => x.id) }];
+
+  /* ---------- Home ---------- */
+  function renderHome() {
+    const wrap = $('cities');
+    wrap.innerHTML = '';
+    MESTA.forEach(m => {
+      const el = document.createElement('section');
+      el.className = 'city';
+      el.innerHTML = `<header><h2></h2><div class="meta"></div></header><p></p><div class="routes"></div>`;
+      el.querySelector('h2').textContent = m.nazov;
+      el.querySelector('.meta').textContent = `${m.krajina} · ${m.miesta.length} zastávok`;
+      el.querySelector('p').textContent = m.uvod;
+      const routes = el.querySelector('.routes');
+      const all = allRoutes(m);
+      all.forEach(r => {
+        const b = document.createElement('button');
+        b.className = 'route';
+        b.innerHTML = `<strong></strong><span></span><span class="go" aria-hidden="true">→</span>`;
+        b.querySelector('strong').textContent = r.nazov;
+        b.querySelectorAll('span')[0].textContent = [r.cas, r.dlzka].filter(Boolean).join(' · ') + ' — ' + r.popis;
+        b.onclick = () => openTour(m, r);
+        routes.appendChild(b);
+      });
+      wrap.appendChild(el);
+    });
+  }
+
+  /* ---------- Tour state ---------- */
+  let map, city, route, stops = [], markers = {}, line, meMarker, meCircle;
+  let pos = null, watchId = null, following = true, simulate = false, wakeLock = null, started = false;
+  let visited = new Set(), queue = [], current = null;
+  const settings = store.get('ts-settings', { rate: 1, auto: true });
+  $('rate').value = settings.rate; $('auto').checked = settings.auto;
+
+  function openTour(m, r) {
+    city = m; route = r;
+    stops = r.zastavky.map(id => m.miesta.find(x => x.id === id)).filter(Boolean);
+    // the same place can close a loop (start = finish); keep first occurrence for numbering
+    const seen = new Set(); stops = stops.filter(s => !seen.has(s.id) && seen.add(s.id));
+    visited = new Set(store.get(`ts-visited-${m.id}-${r.id}`, []));
+    $('home').hidden = true; $('tour').hidden = false;
+    $('tourCity').textContent = m.nazov; $('tourRoute').textContent = r.nazov;
+    try { history.replaceState(null, '', '#' + m.id + '/' + r.id); } catch {}
+    setupMap();
+    updateNext();
+  }
+
+  function setupMap() {
+    if (!map) {
+      map = L.map('map', { zoomControl: false, attributionControl: true });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19, subdomains: 'abc',
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      }).addTo(map);
+      map.on('dragstart', () => setFollow(false));
+      map.on('click', (e) => { if (simulate) onPosition({ coords: { latitude: e.latlng.lat, longitude: e.latlng.lng, accuracy: 5 } }); });
+    }
+    Object.values(markers).forEach(mk => mk.remove()); markers = {};
+    if (line) line.remove();
+    const pts = stops.map(s => [s.lat, s.lon]);
+    if (route.id !== 'vsetko') {
+      const loop = route.zastavky.length > 1 && route.zastavky[0] === route.zastavky[route.zastavky.length - 1];
+      line = L.polyline(loop ? [...pts, pts[0]] : pts, { color: getVar('--river'), weight: 3, opacity: .7, dashArray: '6 8' }).addTo(map);
+    }
+    stops.forEach((s, i) => {
+      const icon = L.divIcon({ className: '', html: `<div class="pin${visited.has(s.id) ? ' done' : ''}">${i + 1}</div>`, iconSize: [30, 30], iconAnchor: [15, 15] });
+      markers[s.id] = L.marker([s.lat, s.lon], { icon, title: s.nazov }).addTo(map).on('click', () => { showStory(s, false); });
+    });
+    setTimeout(() => { map.invalidateSize(); map.fitBounds(L.latLngBounds(pts).pad(0.15)); }, 50);
+  }
+
+  function refreshPin(s) {
+    const i = stops.indexOf(s);
+    markers[s.id]?.setIcon(L.divIcon({ className: '', html: `<div class="pin${visited.has(s.id) ? ' done' : ''}${current === s ? ' active' : ''}">${i + 1}</div>`, iconSize: [30, 30], iconAnchor: [15, 15] }));
+  }
+
+  function getVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || '#2f7f86'; }
+
+  /* ---------- GPS ---------- */
+  function startTour() {
+    started = true;
+    $('startPane').hidden = true; $('nextPane').hidden = false;
+    unlockSpeech();
+    requestWake();
+    if (simulate) { setGps('warn', 'Skúšobný režim: ťukni na mapu tam, kde „stojíš“'); return; }
+    if (!('geolocation' in navigator)) { setGps('warn', 'Tento prehliadač nevie zistiť polohu'); return; }
+    setGps('warn', 'Hľadám polohu…');
+    watchId = navigator.geolocation.watchPosition(onPosition, (err) => {
+      const msg = err.code === 1 ? 'Poloha je zakázaná. Povoľ ju v nastaveniach prehliadača.' : 'Nepodarilo sa zistiť polohu, skúšam znova…';
+      setGps('warn', msg);
+    }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 });
+  }
+
+  function setGps(state, text) { $('gpsDot').className = 'dot' + (state === 'live' ? ' live' : state === 'warn' ? ' warn' : ''); $('gpsText').textContent = text; }
+
+  function onPosition(p) {
+    const { latitude, longitude, accuracy } = p.coords;
+    pos = { lat: latitude, lon: longitude, acc: accuracy || 10 };
+    if (!simulate) setGps('live', `Poloha presná na ±${Math.round(pos.acc)} m`);
+    else setGps('warn', 'Skúšobný režim: ťukni na mapu tam, kde „stojíš“');
+    const ll = [pos.lat, pos.lon];
+    if (!meMarker) {
+      meMarker = L.marker(ll, { icon: L.divIcon({ className: '', html: '<div class="me"></div>', iconSize: [18, 18], iconAnchor: [9, 9] }), interactive: false, zIndexOffset: 1000 }).addTo(map);
+      meCircle = L.circle(ll, { radius: pos.acc, color: getVar('--me'), weight: 1, fillOpacity: .08 }).addTo(map);
+    } else { meMarker.setLatLng(ll); meCircle.setLatLng(ll).setRadius(pos.acc); }
+    if (following) map.panTo(ll, { animate: true });
+    checkProximity();
+    updateNext();
+  }
+
+  function dist(a, b) {
+    const R = 6371000, toR = Math.PI / 180;
+    const dLat = (b.lat - a.lat) * toR, dLon = (b.lon - a.lon) * toR;
+    const x = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * toR) * Math.cos(b.lat * toR) * Math.sin(dLon / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(x));
+  }
+
+  function checkProximity() {
+    if (!pos || pos.acc > 80) return; // too imprecise to trust
+    const slack = Math.min(pos.acc, 20);
+    const hits = stops
+      .filter(s => !visited.has(s.id) && current !== s && !queue.includes(s))
+      .map(s => ({ s, d: dist(pos, s) }))
+      .filter(h => h.d <= (h.s.polomer || 35) + slack)
+      .sort((a, b) => a.d - b.d);
+    hits.forEach(h => queue.push(h.s));
+    if (!current && queue.length) showStory(queue.shift(), true);
+  }
+
+  function nextStop() {
+    const left = stops.filter(s => !visited.has(s.id));
+    if (!left.length) return null;
+    if (route.id === 'vsetko' && pos) return left.slice().sort((a, b) => dist(pos, a) - dist(pos, b))[0];
+    return left[0];
+  }
+
+  function updateNext() {
+    const n = nextStop();
+    if (!n) { $('nextNum').textContent = '✓'; $('nextName').textContent = 'Okruh je hotový. Pekná prechádzka!'; $('nextDist').textContent = ''; return; }
+    $('nextNum').textContent = stops.indexOf(n) + 1;
+    $('nextName').textContent = n.nazov;
+    if (pos) {
+      const d = dist(pos, n);
+      $('nextDist').textContent = d < 1000 ? `${Math.round(d / 10) * 10} m` : `${(d / 1000).toFixed(1).replace('.', ',')} km`;
+    } else $('nextDist').textContent = '–';
+  }
+
+  function setFollow(on) { following = on; $('follow').classList.toggle('on', on); if (on && pos) map.panTo([pos.lat, pos.lon]); }
+
+  async function requestWake() {
+    try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } catch {}
+  }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && started) requestWake(); });
+
+  /* ---------- Story + speech ---------- */
+  let voice = null, sentences = [], sIdx = 0, speaking = false, paused = false;
+  function pickVoice() {
+    const vs = speechSynthesis.getVoices();
+    voice = vs.find(v => /^sk/i.test(v.lang)) || vs.find(v => /^cs/i.test(v.lang)) || null;
+  }
+  if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+
+  function unlockSpeech() {
+    // iOS needs the first utterance to come from a tap
+    if (!('speechSynthesis' in window)) return;
+    const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u);
+  }
+
+  function showStory(s, auto) {
+    current = s;
+    if (auto) { visited.add(s.id); store.set(`ts-visited-${city.id}-${route.id}`, [...visited]); }
+    stops.forEach(refreshPin);
+    $('story').hidden = false; $('player').hidden = false;
+    $('storyKicker').textContent = `Zastávka ${stops.indexOf(s) + 1} z ${stops.length}`;
+    $('storyTitle').textContent = s.nazov;
+    sentences = s.text.match(/[^.!?]+[.!?]+["“”]?\s*/g) || [s.text];
+    const p = $('storyText'); p.innerHTML = '';
+    sentences.forEach((t, i) => { const sp = document.createElement('span'); sp.className = 'sentence'; sp.dataset.i = i; sp.textContent = t; p.appendChild(sp); });
+    const tip = $('storyTip'); tip.hidden = !s.tip; if (s.tip) tip.querySelector('span').textContent = s.tip;
+    $('story').scrollTop = 0;
+    map.panTo([s.lat, s.lon]);
+    if (navigator.vibrate && auto) navigator.vibrate([120, 60, 120]);
+    if (auto && !$('auto').checked) { setPlayLabel(false); return; }
+    speakFrom(0);
+  }
+
+  function speakFrom(i) {
+    if (!('speechSynthesis' in window)) { toast('Tento prehliadač nevie čítať nahlas'); return; }
+    speechSynthesis.cancel(); sIdx = i; speaking = true; paused = false; setPlayLabel(true);
+    // short chunks avoid Chrome cutting long utterances
+    const say = () => {
+      if (!speaking || sIdx >= sentences.length) { speaking = false; highlight(-1); setPlayLabel(false); return; }
+      const u = new SpeechSynthesisUtterance(sentences[sIdx].trim());
+      u.lang = voice ? voice.lang : 'sk-SK'; if (voice) u.voice = voice; u.rate = +$('rate').value;
+      highlight(sIdx);
+      u.onend = () => { if (speaking && !paused) { sIdx++; say(); } };
+      u.onerror = (e) => { if (e.error !== 'interrupted' && e.error !== 'canceled') { sIdx++; say(); } };
+      speechSynthesis.speak(u);
+    };
+    say();
+  }
+  function highlight(i) { document.querySelectorAll('.sentence').forEach(el => el.classList.toggle('now', +el.dataset.i === i)); }
+  function setPlayLabel(isPlaying) { $('playBtn').textContent = isPlaying ? '⏸ Pauza' : '▶ Prečítať'; }
+
+  $('playBtn').onclick = () => {
+    if (speaking && !paused) { paused = true; speaking = false; speechSynthesis.cancel(); setPlayLabel(false); }
+    else if (paused) speakFrom(sIdx);
+    else speakFrom(0);
+  };
+  $('closeStory').onclick = () => {
+    speaking = false; paused = false; speechSynthesis?.cancel(); highlight(-1);
+    $('story').hidden = true; $('player').hidden = true;
+    const was = current; current = null; if (was) refreshPin(was);
+    updateNext();
+    if (queue.length) showStory(queue.shift(), true);
+  };
+
+  function toast(t) { const el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 3200); }
+
+  /* ---------- Controls ---------- */
+  $('startBtn').onclick = startTour;
+  $('follow').onclick = () => setFollow(!following);
+  $('back').onclick = () => {
+    speaking = false; speechSynthesis?.cancel();
+    if (watchId != null) navigator.geolocation.clearWatch(watchId); watchId = null;
+    try { wakeLock?.release(); } catch {}
+    started = false; current = null; queue = []; pos = null;
+    if (meMarker) { meMarker.remove(); meCircle.remove(); meMarker = meCircle = null; }
+    $('story').hidden = true; $('player').hidden = true; $('startPane').hidden = false; $('nextPane').hidden = true; setGps('', 'GPS je vypnuté');
+    $('tour').hidden = true; $('home').hidden = false; $('menu').hidden = true;
+    try { history.replaceState(null, '', location.pathname); } catch {}
+  };
+  $('menuBtn').onclick = () => { const m = $('menu'); m.hidden = !m.hidden; $('menuBtn').setAttribute('aria-expanded', String(!m.hidden)); };
+  $('rate').oninput = () => { settings.rate = +$('rate').value; store.set('ts-settings', settings); };
+  $('auto').onchange = () => { settings.auto = $('auto').checked; store.set('ts-settings', settings); };
+  $('simBtn').onclick = () => {
+    simulate = !simulate; $('simState').textContent = simulate ? 'zap.' : 'vyp.';
+    if (simulate) { if (watchId != null) navigator.geolocation.clearWatch(watchId); watchId = null; toast('Ťukni na mapu, sprievodca sa bude tváriť, že tam stojíš.'); if (started) setGps('warn', 'Skúšobný režim: ťukni na mapu tam, kde „stojíš“'); }
+    else if (started) { startTour(); }
+    $('menu').hidden = true;
+  };
+  $('resetBtn').onclick = () => { visited.clear(); store.set(`ts-visited-${city.id}-${route.id}`, []); queue = []; stops.forEach(refreshPin); updateNext(); $('menu').hidden = true; toast('Okruh začína odznova.'); };
+  $('testVoice').onclick = () => {
+    $('menu').hidden = true;
+    if (!('speechSynthesis' in window)) return toast('Tento prehliadač nevie čítať nahlas');
+    pickVoice();
+    const u = new SpeechSynthesisUtterance('Ahoj, som tvoj sprievodca. Takto budem čítať.');
+    u.lang = voice ? voice.lang : 'sk-SK'; if (voice) u.voice = voice; u.rate = +$('rate').value;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+    toast(voice ? `Hlas: ${voice.name}` : 'Slovenský hlas sa nenašiel, použije sa predvolený.');
+  };
+
+  renderHome();
+  // deep link: #cesky-krumlov/klasika
+  const [cid, rid] = decodeURIComponent(location.hash.slice(1)).split('/');
+  const m = MESTA.find(x => x.id === cid);
+  if (m) { const r = allRoutes(m).find(x => x.id === rid) || m.okruhy[0]; openTour(m, r); }
+})();
+</script>
+</body>
+</html>
