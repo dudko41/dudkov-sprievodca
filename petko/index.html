@@ -206,6 +206,7 @@ footer { text-align: center; color: var(--muted); font-size: 13px; }
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="obsah.js"></script>
+<script src="pruvodce.js"></script>
 <script>
 (() => {
   const $ = (id) => document.getElementById(id);
@@ -250,6 +251,8 @@ footer { text-align: center; color: var(--muted); font-size: 13px; }
     if (!standalone && !store.get('pp-install-x')) $('install').hidden = false;
     $('installX').onclick = () => { $('install').hidden = true; store.set('pp-install-x', '1'); };
     loadPhotos();
+    window.PP = { get DATA() { return DATA; }, now, dayKey, fmtDay, pick, getPos, publicUrl, get PHOTOS() { return PHOTOS; }, refresh: () => { renderAll(); loadPhotos(); }, preview: !!preview };
+    if (window.PRUVODCE) window.PRUVODCE.init();
   }
   function renderAll() { renderToday(); renderGrid(); renderPending(); }
 
@@ -327,6 +330,7 @@ footer { text-align: center; color: var(--muted); font-size: 13px; }
       b.onclick = () => { a.hidden = false; b.hidden = true; }; fact.appendChild(b); fact.appendChild(a);
     }
     const t = taskBlock(key); if (t) frag.appendChild(t);
+    if (key >= '2026-12-05' && DATA.viden) { const b = document.createElement('button'); b.className = 'btn'; b.textContent = '🗺️ Otevřít průvodce po Vídni'; b.onclick = () => { $('dayBg').hidden = true; window.PRUVODCE && window.PRUVODCE.open(); }; frag.appendChild(b); }
     return frag;
   }
   let whereCache = null;
@@ -405,7 +409,7 @@ footer { text-align: center; color: var(--muted); font-size: 13px; }
       html.innerHTML = `<img alt=""><b></b><div></div><i></i>`;
       html.querySelector('img').src = url;
       html.querySelector('b').textContent = fmtDay(p.den, { day: 'numeric', month: 'long' }) + (p.miesto ? ' · ' + p.miesto : '');
-      html.querySelector('div').textContent = d && d.ukol ? d.ukol.text : '';
+      html.querySelector('div').textContent = p.ukol || (d && d.ukol ? d.ukol.text : '');
       html.querySelector('i').textContent = p.popis || '';
       L.marker([p.lat, p.lon], { icon }).addTo(mapLayer).bindPopup(html);
     });
@@ -415,9 +419,9 @@ footer { text-align: center; color: var(--muted); font-size: 13px; }
   }
 
   /* ---------- upload ---------- */
-  let upKey = null, upFile = null, upPosP = null;
-  function pick(k, inputId) {
-    upKey = k; const inp = $(inputId); inp.value = '';
+  let upKey = null, upFile = null, upPosP = null, upExtra = null;
+  function pick(k, inputId, extra) {
+    upKey = k; upExtra = extra || null; const inp = $(inputId); inp.value = '';
     upPosP = getPos(12000); // start locating while the camera is open
     inp.click();
   }
@@ -426,7 +430,7 @@ footer { text-align: center; color: var(--muted); font-size: 13px; }
     upFile = f;
     const d = DATA.dny[upKey];
     $('upDate').textContent = fmtDay(upKey, { weekday: 'long', day: 'numeric', month: 'long' });
-    $('upTitle').textContent = d.ukol ? d.ukol.text : d.nadpis;
+    $('upTitle').textContent = upExtra && upExtra.ukol ? upExtra.ukol : (d.ukol ? d.ukol.text : d.nadpis);
     $('upImg').src = URL.createObjectURL(f);
     $('upText').value = ''; $('upStatus').textContent = ''; $('upSend').disabled = false; $('upSend').hidden = false;
     $('upSave').hidden = !(navigator.canShare && navigator.canShare({ files: [f] }));
@@ -455,7 +459,7 @@ footer { text-align: center; color: var(--muted); font-size: 13px; }
       const path = `${upKey}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
       const r1 = await fetch(`${SB().url}/storage/v1/object/${SB().bucket}/${path}`, { method: 'POST', headers: sbHeaders({ 'Content-Type': 'image/jpeg', 'x-upsert': 'false' }), body: blob });
       if (!r1.ok) throw new Error('foto ' + r1.status);
-      const row = { den: upKey, ukol: DATA.dny[upKey].ukol ? DATA.dny[upKey].ukol.text : null, popis: $('upText').value.trim() || null, cesta: path, lat: pos ? pos.lat : null, lon: pos ? pos.lon : null, miesto };
+      const row = { den: upKey, ukol: upExtra && upExtra.ukol ? upExtra.ukol : (DATA.dny[upKey].ukol ? DATA.dny[upKey].ukol.text : null), popis: $('upText').value.trim() || null, cesta: path, lat: pos ? pos.lat : null, lon: pos ? pos.lon : null, miesto };
       const r2 = await fetch(`${SB().url}/rest/v1/fotky`, { method: 'POST', headers: sbHeaders({ 'Content-Type': 'application/json', Prefer: 'return=representation' }), body: JSON.stringify(row) });
       if (!r2.ok) throw new Error('zapis ' + r2.status);
       const [saved] = await r2.json(); PHOTOS.push(saved);
@@ -463,6 +467,7 @@ footer { text-align: center; color: var(--muted); font-size: 13px; }
       const ok = document.createElement('span'); ok.className = 'ok'; ok.textContent = pos ? 'Uloženo ♥ Fotka je na naší mapě.' : 'Uloženo ♥ (Bez polohy, tak na mapě nebude.)'; $('upStatus').appendChild(ok);
       btn.hidden = true;
       renderAll(); renderMap();
+      if (window.PRUVODCE) window.PRUVODCE.onPhoto(upExtra);
     } catch (e) {
       $('upStatus').textContent = 'Nepodařilo se nahrát. Zkontroluj internet a zkus to znovu.';
       btn.disabled = false;
