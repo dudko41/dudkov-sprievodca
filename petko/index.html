@@ -205,8 +205,8 @@ footer { text-align: center; color: var(--muted); font-size: 13px; }
 <input type="file" id="fileLib" accept="image/*" hidden>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="obsah.js?v=8"></script>
-<script src="pruvodce.js?v=8"></script>
+<script src="obsah.js?v=9"></script>
+<script src="pruvodce.js?v=9"></script>
 <script>
 (() => {
   const $ = (id) => document.getElementById(id);
@@ -239,7 +239,8 @@ footer { text-align: center; color: var(--muted); font-size: 13px; }
   /* ---------- dates (Prague time) ---------- */
   const params = new URLSearchParams(location.search);
   const preview = params.get('nahled');
-  const now = () => preview ? new Date(preview + (preview.length <= 10 ? 'T08:00' : '') + '+01:00') : new Date();
+  const previewOffset = preview ? new Date(preview + (preview.length <= 10 ? 'T08:00' : '') + '+01:00') - Date.now() : 0;
+  const now = () => new Date(Date.now() + previewOffset);
   const dayKey = (d) => d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Prague' });
   const fmtDay = (key, opts) => new Date(key + 'T12:00:00+01:00').toLocaleDateString('cs-CZ', Object.assign({ timeZone: 'Europe/Prague' }, opts));
   const keys = () => Object.keys(DATA.dny).sort();

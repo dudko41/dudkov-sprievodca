@@ -253,6 +253,8 @@
     else { meM.setLatLng(ll); meC.setLatLng(ll).setRadius(pos.acc); }
     if (following) map.panTo(ll);
     if (route && route.id === 'finale') checkFinale(); else check(!!instant);
+    const nx = nextStop();
+    if (nx && nx.lety && !heartAnnounced && !current && !speaking && dist(pos, nx) < 450) { const t = heartLine(nx); if (t) { heartAnnounced = true; speak([{ text: t }], () => { if (!current) $('tPlayer').hidden = true; }); } }
     updateNext();
   }
   function check(instant) {
@@ -367,7 +369,7 @@
     const h = document.createElement('h2'); h.textContent = s.nazov; el.appendChild(h);
     const p = document.createElement('p'); p.id = 'tText'; fill(p, s.text); el.appendChild(p);
     if (s.pozri && s.pozri.length) { const ul = document.createElement('ul'); ul.className = 'tlook'; ul.innerHTML = '<li class="h">Kam se podívat</li>'; s.pozri.forEach(t => { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); }); el.appendChild(ul); }
-    if (!auto && !visited.has(s.id) && !small) { const b = document.createElement('button'); b.className = 'btn'; b.textContent = 'Jsme tady'; b.onclick = () => { markVisited(s); b.remove(); playStory(s, () => { if (s.gula) award(s); }); }; el.appendChild(b); }
+    if (!auto && !visited.has(s.id) && !small) { const b = document.createElement('button'); b.className = 'btn'; b.textContent = 'Jsme tady'; b.onclick = () => { markVisited(s); b.remove(); playStory(s, () => { if (s.gula) { if (s.lety) awardAfterLanding(s); else award(s); } }); }; el.appendChild(b); }
     if (s.foto) {
       const f = document.createElement('div'); f.className = 'tfoto';
       const done = fotoDone.has(s.id);
@@ -392,16 +394,53 @@
     map.panTo([s.lat, s.lon]); setFollow(false); setTimeout(() => setFollow(true), 15000);
     setupMap();
     if (navigator.vibrate && auto) navigator.vibrate(small ? [80] : [120, 60, 120]);
-    if (auto && !settings.auto) { $('tPlay').textContent = '▶ Přehrát'; if (s.gula && firstTime) award(s); return; }
-    playStory(s, () => { if (s.gula && firstTime && (auto || visited.has(s.id))) award(s); });
+    if (s.lety) heartBox(s, el);
+    const give = () => { if (s.lety) awardAfterLanding(s); else award(s); };
+    if (auto && !settings.auto) { $('tPlay').textContent = '▶ Přehrát'; if (s.gula && firstTime) give(); return; }
+    playStory(s, () => { if (s.gula && firstTime && (auto || visited.has(s.id))) give(); });
   }
+  /* ---------- flying heart ---------- */
+  function nextFlight(s) {
+    const L = s.lety; if (!L) return null;
+    const n = PP.now(); const key = PP.dayKey(n);
+    const at = (hm) => new Date(`${key}T${hm}:00+01:00`);
+    const from = at(L.od), to = at(L.do);
+    let t = new Date(Math.max(n.getTime(), from.getTime()));
+    const step = L.kazdych * 60000; const base = from.getTime();
+    let k = Math.ceil((t.getTime() - base) / step); let f = new Date(base + k * step);
+    if (f < n) f = new Date(f.getTime() + step);
+    return f <= to ? f : null;
+  }
+  const minsTo = (d) => Math.max(0, Math.round((d - PP.now()) / 60000));
+  let heartTimer = null, heartAnnounced = false;
+  function heartBox(s, el) {
+    const box = document.createElement('div'); box.className = 'tfoto'; box.id = 'tHeart';
+    el.insertBefore(box, el.children[2] || null);
+    const tick = () => {
+      const f = nextFlight(s);
+      if (!f) { box.innerHTML = '<div class="tkick">Létající srdce</div><div>Dnes už srdce nelétá, ale strom svítí dál.</div>'; return; }
+      const sec = Math.max(0, Math.round((f - PP.now()) / 1000));
+      box.innerHTML = `<div class="tkick">Létající srdce</div><div style="font:700 30px var(--display);color:var(--gold-soft)">${sec > 0 ? `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}` : 'Letí! ♥'}</div><div>${sec > 0 ? 'Postavte se pod strom a dívejte se nahoru.' : 'Dívejte se nahoru.'}</div>`;
+    };
+    tick(); clearInterval(heartTimer); heartTimer = setInterval(() => { if (!document.getElementById('tHeart')) { clearInterval(heartTimer); return; } tick(); }, 1000);
+  }
+  let heartAwardTimer = null;
+  function awardAfterLanding(s) {
+    const f = nextFlight(s);
+    if (!f) { award(s); return; }
+    const ms = f - PP.now() + (s.lety.pristani || 45) * 1000;
+    if (ms > 35 * 60000) { award(s); return; }
+    clearTimeout(heartAwardTimer); heartAwardTimer = setTimeout(() => award(s, 'Srdce přistálo na stromě.'), Math.max(0, ms));
+  }
+  function heartLine(s) { const f = nextFlight(s); if (!f) return null; const m = minsTo(f); return m <= 0 ? 'Srdce právě letí. Dívejte se nahoru.' : `Srdce poletí za ${m} ${m === 1 ? 'minutu' : m < 5 ? 'minuty' : 'minut'}. Postavte se pod strom.`; }
+
   function transition(s) {
     if (!route || s.typ === 'drobnost') return null;
     const left = stops.filter(x => !visited.has(x.id) && x !== s && !x.finale);
     if (!left.length && route.zaver && visited.has(s.id)) return route.zaver;
     return route.cestou && route.cestou[s.id] || null;
   }
-  function playStory(s, done) { const list = [{ text: s.text, node: $('tText') }]; const tr = transition(s); if (tr) list.push({ text: tr }); speak(list, done); }
+  function playStory(s, done) { const list = [{ text: s.text, node: $('tText') }]; const hl2 = s.lety && heartLine(s); if (hl2) list.push({ text: hl2 }); const tr = transition(s); if (tr) list.push({ text: tr }); speak(list, done); }
   function markVisited(s) { const was = visited.has(s.id); visited.add(s.id); save(); updateTreeN(); if (!was) setupMap(); }
   $('tClose').onclick = () => {
     stopSpeech(); $('tStory').hidden = true; $('tPlayer').hidden = true; $('tSheet').classList.remove('tall');
@@ -411,7 +450,7 @@
 
   /* ---------- ornaments ---------- */
   function updateTreeN() { if (!V) return; $('tTreeN').textContent = `${gotGule().length}/${gulaStops().length}`; }
-  function award(s) {
+  function award(s, prefix) {
     const n = gotGule().length, t = gulaStops().length, ov = $('tAward');
     ov.innerHTML = '';
     ov.className = 'tover award';
@@ -424,7 +463,8 @@
     ov.append(ball, h, p);
     if (V.obalky !== false) ov.append(env);
     ov.append(b); ov.hidden = false;
-    speak([{ text: `Nová ozdoba, ${s.gula.nazov}.` + (V.obalky !== false ? ` A Dušan má pro tebe obálku číslo ${s.gula.poradie + 1}.` : '') }]);
+    if (prefix) { const pp = document.createElement('p'); pp.textContent = prefix; pp.style.color = 'var(--gold-soft)'; ov.insertBefore(pp, h); }
+    speak([{ text: (prefix ? prefix + ' ' : '') + `Nová ozdoba, ${s.gula.nazov}.` + (V.obalky !== false ? ` A Dušan má pro tebe obálku číslo ${s.gula.poradie + 1}.` : '') }]);
   }
   function treeSVG(mode) {
     // mode: 'collect' (shows emojis) | 'reveal' (letters hidden until lit)
