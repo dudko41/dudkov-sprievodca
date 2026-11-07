@@ -559,7 +559,7 @@
       fb.querySelector('.lib').onclick = () => PP.pick('2026-12-06', 'fileLib', ex);
       const c = document.createElement('button'); c.className = 'btn ghost'; c.textContent = 'Zavřít'; c.onclick = () => { ov.hidden = true; showPlan(); route = null; setupMap(); };
       ov.append(card, fb, c);
-      speak([{ text: V.tajenka.toLowerCase() + '.' }, { text: f.poOdhaleni }]);
+      speak([{ text: V.tajenka.replace(/♥/g, '').trim().toLowerCase() + '.' }, { text: f.poOdhaleni }]);
       updateTreeN();
     }
   }
