@@ -305,7 +305,7 @@ footer { text-align: center; color: var(--muted); font-size: 13px; }
     el.innerHTML = `<div class="lbl"></div><div class="t"></div><div class="note"></div><div class="thumbs"></div><div class="row"><button class="btn cam">📷 Vyfotit</button><button class="btn ghost lib">Z galerie</button></div>`;
     el.querySelector('.lbl').textContent = d.ukol.typ === 'spolu' ? 'Úkol pro nás dva' : 'Úkol jen pro tebe';
     el.querySelector('.t').textContent = d.ukol.text;
-    if (d.ukol.otazka) { const q = document.createElement('div'); q.className = 'note'; q.style.color = 'var(--gold-soft)'; q.textContent = 'A napiš: ' + d.ukol.otazka; el.insertBefore(q, el.querySelector('.note')); }
+    if (d.ukol.otazka) { const q = document.createElement('div'); q.className = 'tq'; q.style.cssText = 'font-size:15px;color:var(--gold-soft)'; q.textContent = 'A napiš: ' + d.ukol.otazka; el.insertBefore(q, el.querySelector('.note')); }
     ph.filter(p => p.popis).forEach(p => { const a = document.createElement('p'); a.className = 'answer'; a.textContent = '„' + p.popis + '“'; el.insertBefore(a, el.querySelector('.row')); });
     el.querySelector('.note').textContent = ph.length ? '' : (d.ukol.typ === 'spolu' ? 'Když to dnes nestihneme, úkol počká, dokud nebudeme spolu.' : 'Když to dnes nestihneš, úkol počká.');
     if (ph.length) { const ok = document.createElement('div'); ok.className = 'ok'; ok.textContent = ph.length === 1 ? 'Splněno ♥ Fotka je v naší mapě.' : `Splněno ♥ ${ph.length} fotky v naší mapě.`; el.insertBefore(ok, el.querySelector('.thumbs')); }
