@@ -32,6 +32,20 @@
   .rcard em { font-style: normal; font-size: 13px; color: #9fe0b4; grid-column: 1; font-weight: 700; }
   .rcard .go { grid-row: 1 / span 3; grid-column: 2; color: var(--gold); font-size: 22px; }
   .rcard.final { border-color: var(--rose); }
+  .rcard strong { font: 500 20px/1.2 var(--display); }
+  .rcard .meta { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+  .badge { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; border-radius: 999px; padding: 3px 9px; border: 1px solid; white-space: nowrap; }
+  .badge.k { color: var(--gold-soft); border-color: rgba(227,189,106,.5); }
+  .badge.r { color: var(--rose); border-color: rgba(232,138,138,.55); }
+  .slist { display: flex; flex-direction: column; }
+  .slist h3 { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; font-weight: 700; }
+  .srow { display: flex; gap: 12px; align-items: center; padding: 10px 0; border: 0; border-bottom: 1px solid var(--line); background: none; color: var(--snow); text-align: left; width: 100%; }
+  .srow:last-child { border-bottom: 0; }
+  .srow .n { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--gold); color: var(--gold-soft); display: grid; place-items: center; font-weight: 700; font-size: 13px; flex: none; }
+  .srow.done .n { background: #7d86a3; border-color: transparent; color: #fff; }
+  .srow .nm { flex: 1; min-width: 0; font: 500 17px/1.25 var(--display); }
+  .srow .nm small { display: block; font: 400 13px/1.3 var(--body); color: var(--muted); }
+  .khead { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
   .tnext { display: flex; gap: 12px; align-items: center; }
   .tnext .num { width: 32px; height: 32px; border-radius: 50%; background: var(--gold); color: #1a1406; display: grid; place-items: center; font-weight: 700; flex: none; }
   .tnext .tx { flex: 1; min-width: 0; }
@@ -116,6 +130,7 @@
       <div class="tscroll" id="tPlan"></div>
       <div id="tRoute" hidden style="display:flex;flex-direction:column;gap:12px;min-height:0">
         <button class="btn" id="tStart">Spustit</button>
+        <div class="tscroll slist" id="tList"></div>
         <div class="tnext" id="tNext" hidden>
           <div class="num" id="tNum">1</div>
           <div class="tx"><span id="tNextL">Další zastávka</span><strong id="tNextN"></strong></div>
@@ -155,7 +170,7 @@
   function dist(a, b) { const R = 6371000, r = Math.PI / 180, dLat = (b.lat - a.lat) * r, dLon = (b.lon - a.lon) * r; const x = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLon / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(x)); }
   function bearing(a, b) { const r = Math.PI / 180, y = Math.sin((b.lon - a.lon) * r) * Math.cos(b.lat * r); const x = Math.cos(a.lat * r) * Math.sin(b.lat * r) - Math.sin(a.lat * r) * Math.cos(b.lat * r) * Math.cos((b.lon - a.lon) * r); return (Math.atan2(y, x) / r + 360) % 360; }
   const fmtDist = (d) => d < 1000 ? `${Math.round(d / 10) * 10} m` : `${(d / 1000).toFixed(1).replace('.', ',')} km`;
-  const decode = (s) => s.trim().split(/\s+/).map(p => { const [a, b] = p.split(',').map(Number); return [48 + a / 1e5, 16 + b / 1e5]; });
+  const decode = (s) => s.split('|').map(seg => seg.trim().split(/\s+/).map(p => { const [a, b] = p.split(',').map(Number); return [48 + a / 1e5, 16 + b / 1e5]; }));
 
   /* ---------- open / plan ---------- */
   function init() { PP = window.PP; V = PP.DATA.viden; if (!V) return; updateTreeN(); }
@@ -177,15 +192,18 @@
     $('tProg').textContent = `🎄 ${gotGule().length} z ${gulaStops().length} ozdob`;
     const p = $('tPlan'); p.innerHTML = '';
     const intro = document.createElement('p'); intro.style.margin = '0'; intro.style.color = 'var(--muted)';
-    intro.textContent = 'Vyber část víkendu. Až dojdete k zastávce, ozvu se sám. Na některých místech na tebe čeká ozdoba na stromeček.';
+    intro.textContent = 'Tvůj první víkend ve Vídni. Vyber část dne, a až dojdete k zastávce, ozvu se sám. Na místech s dárečkem na tebe čeká ozdoba na stromeček.';
     p.appendChild(intro);
     let lastDay = '';
     V.okruhy.forEach(r => {
       if (r.den !== lastDay) { lastDay = r.den; const h = document.createElement('div'); h.className = 'dayh'; h.textContent = PP.fmtDay(r.den, { weekday: 'long', day: 'numeric', month: 'numeric' }); p.appendChild(h); }
       const b = document.createElement('button'); b.className = 'rcard' + (r.id === 'finale' ? ' final' : '');
-      b.innerHTML = '<strong></strong><span class="d"></span><em hidden></em><span class="go">→</span>';
-      b.querySelector('strong').textContent = r.nazov;
-      b.querySelector('.d').textContent = [r.cas, r.dlzka].filter(Boolean).join(' · ') + ' — ' + r.popis;
+      b.innerHTML = '<strong></strong><span class="meta"></span><span class="d"></span><em hidden></em><span class="go">→</span>';
+      b.querySelector('strong').textContent = r.nazov.replace(/^[^:]+:\s*/, '');
+      const zs = r.zastavky.map(byId).filter(x => x && !x.finale), gs = zs.filter(x => x.gula).length;
+      const kdy = r.nazov.includes(':') ? r.nazov.split(':')[0].replace(/^(Sobota|Neděle|Pondělí)\s*/, '') : '';
+      b.querySelector('.meta').textContent = [kdy, zs.length ? `${zs.length} ${zs.length < 5 ? 'zastávky' : 'zastávek'}` : '', gs ? `🎁 ${gs}` : '', r.cas].filter(Boolean).join(' · ');
+      b.querySelector('.d').textContent = r.popis;
       const { n, t } = routeDone(r);
       if (r.id !== 'finale' && n) { const e = b.querySelector('em'); e.hidden = false; e.textContent = n >= t ? 'Hotovo ✓' : `Hotovo ${n} z ${t}`; }
       if (r.id === 'finale' && store.get('pp-v-revealed', false)) { const e = b.querySelector('em'); e.hidden = false; e.textContent = 'Rozsvíceno ♥'; }
@@ -205,7 +223,7 @@
       map.on('click', (e) => { if (simulate) onPos({ coords: { latitude: e.latlng.lat, longitude: e.latlng.lng, accuracy: 5 } }, true); });
     }
     layer.clearLayers(); line = null;
-    const list = route ? stops : V.miesta.filter(m => !m.typ);
+    const used = new Set(V.okruhy.flatMap(r => r.zastavky)); const list = route ? stops : V.miesta.filter(m => !m.typ && used.has(m.id));
     const pts = list.map(s => [s.lat, s.lon]);
     if (route && route.trasa) line = L.polyline(decode(route.trasa), { color: '#e3bd6a', weight: 4, opacity: .8 }).addTo(layer);
     if (route) smalls.forEach(s => L.marker([s.lat, s.lon], { icon: L.divIcon({ className: '', html: `<div class="minv${visited.has(s.id) ? ' done' : ''}"></div>`, iconSize: [14, 14], iconAnchor: [7, 7] }) }).addTo(layer).on('click', () => showStory(s, false)));
@@ -227,10 +245,24 @@
     $('tPlan').hidden = true; $('tRoute').hidden = false;
     $('tStart').hidden = false; $('tNext').hidden = true; $('tStory').hidden = true; $('tPlayer').hidden = true;
     $('tStart').textContent = r.id === 'finale' ? 'Jsme na cestě do Schönbrunnu' : 'Spustit procházku';
+    renderList(); $('tList').hidden = r.id === 'finale';
     setupMap(); updateNext();
   }
+  function renderList() {
+    const box = $('tList'); box.innerHTML = '';
+    const h = document.createElement('h3'); h.textContent = 'Co vás čeká'; box.appendChild(h);
+    stops.filter(s => !s.finale).forEach((s, i) => {
+      const b = document.createElement('button'); b.className = 'srow' + (visited.has(s.id) ? ' done' : '');
+      b.innerHTML = '<span class="n"></span><span class="nm"></span>';
+      b.querySelector('.n').textContent = visited.has(s.id) ? '✓' : i + 1;
+      b.querySelector('.nm').textContent = s.nazov + (s.gula && !visited.has(s.id) ? ' 🎁' : '');
+      if (s.druh) { const g = document.createElement('span'); g.className = 'badge ' + (s.druh === 'romantika' ? 'r' : 'k'); g.textContent = s.druh === 'romantika' ? '♥ Romantika' : 'Klasika'; b.appendChild(g); }
+      box.appendChild(b);
+    });
+    if (smalls.length) { const p = document.createElement('p'); p.style.cssText = 'margin:10px 0 0;font-size:14px;color:var(--muted)'; p.textContent = `A cestou ${smalls.length} ${smalls.length === 1 ? 'drobnost' : smalls.length < 5 ? 'drobnosti' : 'drobností'}, o kterých se dozvíš, až půjdeš kolem.`; box.appendChild(p); }
+  }
   $('tStart').onclick = () => {
-    $('tStart').hidden = true; $('tNext').hidden = false;
+    $('tStart').hidden = true; $('tNext').hidden = false; $('tList').hidden = true;
     unlockSpeech(); startCompass(); try { navigator.wakeLock && navigator.wakeLock.request('screen').catch(() => {}); } catch {}
     if (route.id === 'finale') { showFinale(); }
     else if (route.uvod && !intro.has(route.id)) { intro.add(route.id); save(); speak([{ text: route.uvod }], () => { if (!current) $('tPlayer').hidden = true; }); }
@@ -365,7 +397,10 @@
     const firstTime = !visited.has(s.id);
     if (auto) markVisited(s);
     const el = $('tStory'); el.hidden = false; el.innerHTML = ''; $('tSheet').classList.add('tall');
-    const k = document.createElement('div'); k.className = 'tkick'; k.textContent = small ? 'Drobnost cestou' : `Zastávka ${stops.indexOf(s) + 1} z ${stops.length}`; el.appendChild(k);
+    const k = document.createElement('div'); k.className = 'tkick'; k.textContent = small ? 'Drobnost cestou' : `Zastávka ${stops.indexOf(s) + 1} z ${stops.length}`;
+    const kh = document.createElement('div'); kh.className = 'khead'; kh.appendChild(k);
+    if (s.druh) { const g = document.createElement('span'); g.className = 'badge ' + (s.druh === 'romantika' ? 'r' : 'k'); g.textContent = s.druh === 'romantika' ? '♥ Romantika' : 'Klasika'; kh.appendChild(g); }
+    el.appendChild(kh);
     const h = document.createElement('h2'); h.textContent = s.nazov; el.appendChild(h);
     const p = document.createElement('p'); p.id = 'tText'; fill(p, s.text); el.appendChild(p);
     if (s.pozri && s.pozri.length) { const ul = document.createElement('ul'); ul.className = 'tlook'; ul.innerHTML = '<li class="h">Kam se podívat</li>'; s.pozri.forEach(t => { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); }); el.appendChild(ul); }
@@ -457,14 +492,14 @@
     const ball = document.createElement('div'); ball.className = 'ball'; ball.textContent = s.gula.motiv;
     const h = document.createElement('h2'); h.textContent = 'Nová ozdoba: ' + s.gula.nazov;
     const p = document.createElement('p'); p.textContent = n >= t ? `Máš všech ${t} ozdob. Stromeček je kompletní. Rozsvítí se v Schönbrunnu.` : `Na stromečku už máš ${n} z ${t}. Co je uvnitř, se dozvíš později.`;
-    const env = document.createElement('div'); env.className = 'env'; env.textContent = `A Dušan má pro tebe obálku číslo ${s.gula.poradie + 1}.`;
-    const b = document.createElement('button'); b.className = 'btn'; b.textContent = 'Pověsit na stromeček';
+    const env = document.createElement('div'); env.className = 'env'; env.textContent = s.gula.uloha ? `Dušan má pro tebe obálku číslo ${s.gula.poradie + 1}. Ale nejdřív: ${s.gula.uloha}` : `A Dušan má pro tebe obálku číslo ${s.gula.poradie + 1}.`;
+    const b = document.createElement('button'); b.className = 'btn'; b.textContent = s.gula.uloha ? 'Splněno, pověsit na stromeček' : 'Pověsit na stromeček';
     b.onclick = () => { ov.hidden = true; };
     ov.append(ball, h, p);
     if (V.obalky !== false) ov.append(env);
     ov.append(b); ov.hidden = false;
     if (prefix) { const pp = document.createElement('p'); pp.textContent = prefix; pp.style.color = 'var(--gold-soft)'; ov.insertBefore(pp, h); }
-    speak([{ text: (prefix ? prefix + ' ' : '') + `Nová ozdoba, ${s.gula.nazov}.` + (V.obalky !== false ? ` A Dušan má pro tebe obálku číslo ${s.gula.poradie + 1}.` : '') }]);
+    speak([{ text: (prefix ? prefix + ' ' : '') + `Nová ozdoba, ${s.gula.nazov}.` + (V.obalky !== false ? (s.gula.uloha ? ` Dušan má pro tebe obálku číslo ${s.gula.poradie + 1}. Ale nejdřív si ji musíš zasloužit. ${s.gula.uloha}` : ` A Dušan má pro tebe obálku číslo ${s.gula.poradie + 1}.`) : '') }]);
   }
   function treeSVG(mode) {
     // mode: 'collect' (shows emojis) | 'reveal' (letters hidden until lit)

@@ -205,8 +205,8 @@ footer { text-align: center; color: var(--muted); font-size: 13px; }
 <input type="file" id="fileLib" accept="image/*" hidden>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="obsah.js?v=12"></script>
-<script src="pruvodce.js?v=12"></script>
+<script src="obsah.js?v=17"></script>
+<script src="pruvodce.js?v=17"></script>
 <script>
 (() => {
   const $ = (id) => document.getElementById(id);
@@ -238,6 +238,7 @@ footer { text-align: center; color: var(--muted); font-size: 13px; }
 
   /* ---------- dates (Prague time) ---------- */
   const params = new URLSearchParams(location.search);
+  const JA_DUSAN = false;
   const preview = params.get('nahled');
   const previewOffset = preview ? new Date(preview + (preview.length <= 10 ? 'T08:00' : '') + '+01:00') - Date.now() : 0;
   const now = () => new Date(Date.now() + previewOffset);
@@ -278,6 +279,10 @@ footer { text-align: center; color: var(--muted); font-size: 13px; }
     } catch {}
   }
   const photosOf = (k) => PHOTOS.filter(p => p.den === k);
+  const autorOf = (p) => (/\/dusan-/.test(p.cesta || '') ? 'dusan' : 'petko');
+  const byOf = (k, a) => photosOf(k).filter(p => autorOf(p) === a);
+  const mineOf = (k) => byOf(k, 'petko');
+  const bothOf = (k) => byOf(k, 'petko').length > 0 && byOf(k, 'dusan').length > 0;
 
   /* ---------- location ---------- */
   function getPos(timeout = 9000) {
@@ -300,20 +305,49 @@ footer { text-align: center; color: var(--muted); font-size: 13px; }
   /* ---------- rendering ---------- */
   function taskBlock(k) {
     const d = DATA.dny[k]; if (!d.ukol) return null;
-    const ph = photosOf(k);
-    const el = document.createElement('div'); el.className = 'task' + (ph.length ? ' done' : '');
+    const dial = d.ukol.typ === 'dialka';
+    const ph = photosOf(k), mine = dial ? mineOf(k) : ph;
+    const el = document.createElement('div'); el.className = 'task' + (mine.length ? ' done' : '');
     el.innerHTML = `<div class="lbl"></div><div class="t"></div><div class="note"></div><div class="thumbs"></div><div class="row"><button class="btn cam">📷 Vyfotit</button><button class="btn ghost lib">Z galerie</button></div>`;
-    el.querySelector('.lbl').textContent = d.ukol.typ === 'spolu' ? 'Úkol pro nás dva' : 'Úkol jen pro tebe';
-    el.querySelector('.t').textContent = d.ukol.text;
-    if (d.ukol.otazka) { const q = document.createElement('div'); q.className = 'tq'; q.style.cssText = 'font-size:15px;color:var(--gold-soft)'; q.textContent = 'A napiš: ' + d.ukol.otazka; el.insertBefore(q, el.querySelector('.note')); }
-    ph.filter(p => p.popis).forEach(p => { const a = document.createElement('p'); a.className = 'answer'; a.textContent = '„' + p.popis + '“'; el.insertBefore(a, el.querySelector('.row')); });
-    el.querySelector('.note').textContent = ph.length ? '' : (d.ukol.typ === 'spolu' ? 'Když to dnes nestihneme, úkol počká, dokud nebudeme spolu.' : 'Když to dnes nestihneš, úkol počká.');
-    if (ph.length) { const ok = document.createElement('div'); ok.className = 'ok'; ok.textContent = ph.length === 1 ? 'Splněno ♥ Fotka je v naší mapě.' : `Splněno ♥ ${ph.length} fotky v naší mapě.`; el.insertBefore(ok, el.querySelector('.thumbs')); }
-    const th = el.querySelector('.thumbs'); ph.forEach(p => { const i = document.createElement('img'); i.src = publicUrl(p.cesta); i.alt = d.ukol.text; i.loading = 'lazy'; th.appendChild(i); });
+    el.querySelector('.lbl').textContent = dial ? 'Úkol pro nás dva na dálku' : (d.ukol.typ === 'spolu' ? 'Úkol pro nás dva' : 'Úkol jen pro tebe');
+    const tt = el.querySelector('.t');
+    if (dial) {
+      tt.innerHTML = '<div><b>Ty:</b> <span class="a"></span></div><div style="margin-top:4px"><b>Duško:</b> <span class="b"></span></div>';
+      const me = JA_DUSAN ? d.ukol.dusan : d.ukol.text, other = JA_DUSAN ? d.ukol.text : d.ukol.dusan;
+      tt.querySelector('b').textContent = JA_DUSAN ? 'Ty (Duško):' : 'Ty:';
+      tt.querySelectorAll('b')[1].textContent = JA_DUSAN ? 'Peťko:' : 'Duško:';
+      tt.querySelector('.a').textContent = me; tt.querySelector('.b').textContent = other;
+    } else tt.textContent = d.ukol.text;
+    if (d.ukol.otazka && !JA_DUSAN) { const q = document.createElement('div'); q.className = 'tq'; q.style.cssText = 'font-size:15px;color:var(--gold-soft)'; q.textContent = 'A napiš: ' + d.ukol.otazka; el.insertBefore(q, el.querySelector('.note')); }
+    const th = el.querySelector('.thumbs');
+    if (dial) {
+      th.style.gridTemplateColumns = '1fr 1fr';
+      [['petko', JA_DUSAN ? 'Peťko' : 'Ty'], ['dusan', JA_DUSAN ? 'Ty' : 'Duško']].forEach(([a, label]) => {
+        const col = document.createElement('div'); col.style.cssText = 'display:flex;flex-direction:column;gap:6px;min-width:0';
+        const l = document.createElement('div'); l.className = 'lbl'; l.textContent = label; col.appendChild(l);
+        const list = byOf(k, a);
+        if (!list.length) { const e = document.createElement('div'); e.style.cssText = 'aspect-ratio:1;border:1px dashed var(--line);border-radius:10px;display:grid;place-items:center;color:var(--muted);font-size:13px;text-align:center;padding:6px'; e.textContent = 'Zatím nic'; col.appendChild(e); }
+        list.forEach(p => { const i = document.createElement('img'); i.src = publicUrl(p.cesta); i.alt = label; i.loading = 'lazy'; col.appendChild(i); if (p.popis) { const c = document.createElement('p'); c.className = 'answer'; c.style.fontSize = '14px'; c.textContent = '„' + p.popis + '“'; col.appendChild(c); } });
+        th.appendChild(col);
+      });
+    } else {
+      ph.forEach(p => { const i = document.createElement('img'); i.src = publicUrl(p.cesta); i.alt = d.ukol.text; i.loading = 'lazy'; th.appendChild(i); });
+      ph.filter(p => p.popis).forEach(p => { const a = document.createElement('p'); a.className = 'answer'; a.textContent = '„' + p.popis + '“'; el.insertBefore(a, el.querySelector('.row')); });
+    }
+    el.querySelector('.note').textContent = (dial ? bothOf(k) : mine.length) ? '' : (dial ? 'Napiš Duškovi, co má vyfotit, a jeho fotku sem nahraj taky. Když to dnes nestihnete, úkol počká.' : (d.ukol.typ === 'spolu' ? 'Když to dnes nestihneme, úkol počká, dokud nebudeme spolu.' : 'Když to dnes nestihneš, úkol počká.'));
+    if (dial ? (byOf(k, 'petko').length || byOf(k, 'dusan').length) : mine.length) { const ok = document.createElement('div'); ok.className = 'ok'; ok.textContent = dial ? (bothOf(k) ? 'Obě poloviny jsou tady ♥' : (mine.length ? 'Tvoje polovina je tady ♥ Ještě Duškova.' : 'Duškova polovina je tady ♥ Ještě tvoje.')) : (ph.length === 1 ? 'Splněno ♥ Fotka je v naší mapě.' : `Splněno ♥ ${ph.length} fotky v naší mapě.`); el.insertBefore(ok, th); }
     if (!SB().url) el.querySelector('.row').hidden = true;
     el.querySelector('.cam').onclick = () => pick(k, 'fileCam');
     el.querySelector('.lib').onclick = () => pick(k, 'fileLib');
-    if (ph.length) { el.querySelector('.cam').textContent = '📷 Další fotka'; }
+    if (mine.length) { el.querySelector('.cam').textContent = dial ? '📷 Moje další' : '📷 Další fotka'; }
+    else if (dial) { el.querySelector('.cam').textContent = '📷 Moje fotka'; }
+    if (dial && SB().url) {
+      const r2 = document.createElement('div'); r2.className = 'row';
+      const b = document.createElement('button'); b.className = 'btn ghost'; b.style.flex = '1';
+      b.textContent = byOf(k, 'dusan').length ? 'Přidat další Duškovu fotku' : '💌 Nahrát Duškovu fotku';
+      b.onclick = () => pick(k, 'fileLib', { autor: 'dusan', ukol: d.ukol.dusan });
+      r2.appendChild(b); el.appendChild(r2);
+    }
     return el;
   }
 
@@ -356,7 +390,7 @@ footer { text-align: center; color: var(--muted); font-size: 13px; }
   function renderPending() {
     const cur = currentKey(); const box = $('pending'); box.innerHTML = '';
     if (!cur) { $('pendingSec').hidden = true; return; }
-    const list = keys().filter(k => k < cur && DATA.dny[k].ukol && !photosOf(k).length);
+    const list = keys().filter(k => k < cur && DATA.dny[k].ukol && !(DATA.dny[k].ukol.typ === 'dialka' ? bothOf(k) : photosOf(k).length));
     $('pendingSec').hidden = !list.length || !SB().url;
     const showAll = box.dataset.all === '1';
     list.forEach((k, i) => {
@@ -433,9 +467,9 @@ footer { text-align: center; color: var(--muted); font-size: 13px; }
     upFile = f;
     const d = DATA.dny[upKey];
     $('upDate').textContent = fmtDay(upKey, { weekday: 'long', day: 'numeric', month: 'long' });
-    $('upTitle').textContent = upExtra && upExtra.ukol ? upExtra.ukol : (d.ukol ? d.ukol.text : d.nadpis);
+    $('upTitle').textContent = upExtra && upExtra.autor === 'dusan' ? 'Duškova fotka: ' + upExtra.ukol : (upExtra && upExtra.ukol ? upExtra.ukol : (d.ukol ? d.ukol.text : d.nadpis));
     $('upImg').src = URL.createObjectURL(f);
-    const q = !upExtra && d.ukol && d.ukol.otazka; $('upLbl').textContent = q ? 'Otázka pro tebe: ' + q : 'Pár slov k fotce (nepovinné)'; $('upText').placeholder = q ? 'Napiš sem svou odpověď…' : 'Co se tu zrovna dělo…';
+    const q = (!upExtra || (upExtra && upExtra.autor !== 'dusan' && !upExtra.stopId)) && d.ukol && d.ukol.otazka; $('upLbl').textContent = q ? 'Otázka pro tebe: ' + q : 'Pár slov k fotce (nepovinné)'; $('upText').placeholder = q ? 'Napiš sem svou odpověď…' : 'Co se tu zrovna dělo…';
     $('upText').value = ''; $('upStatus').textContent = ''; $('upSend').disabled = false; $('upSend').hidden = false;
     $('upSave').hidden = !(navigator.canShare && navigator.canShare({ files: [f] }));
     $('dayBg').hidden = true; $('upBg').hidden = false;
@@ -460,10 +494,10 @@ footer { text-align: center; color: var(--muted); font-size: 13px; }
       const miesto = await placeName(pos);
       $('upStatus').textContent = 'Nahrávám fotku…';
       const blob = await shrink(upFile);
-      const path = `${upKey}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
+      const path = `${upKey}/${upExtra && upExtra.autor === 'dusan' ? 'dusan-' : ''}${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
       const r1 = await fetch(`${SB().url}/storage/v1/object/${SB().bucket}/${path}`, { method: 'POST', headers: sbHeaders({ 'Content-Type': 'image/jpeg', 'x-upsert': 'false' }), body: blob });
       if (!r1.ok) throw new Error('foto ' + r1.status);
-      const row = { den: upKey, ukol: upExtra && upExtra.ukol ? upExtra.ukol : (DATA.dny[upKey].ukol ? DATA.dny[upKey].ukol.text : null), popis: $('upText').value.trim() || null, cesta: path, lat: pos ? pos.lat : null, lon: pos ? pos.lon : null, miesto };
+      const row = { den: upKey, ukol: upExtra && upExtra.autor === 'dusan' ? 'Duško: ' + upExtra.ukol : (upExtra && upExtra.ukol ? upExtra.ukol : (DATA.dny[upKey].ukol ? DATA.dny[upKey].ukol.text : null)), popis: $('upText').value.trim() || null, cesta: path, lat: pos ? pos.lat : null, lon: pos ? pos.lon : null, miesto };
       const r2 = await fetch(`${SB().url}/rest/v1/fotky`, { method: 'POST', headers: sbHeaders({ 'Content-Type': 'application/json', Prefer: 'return=representation' }), body: JSON.stringify(row) });
       if (!r2.ok) throw new Error('zapis ' + r2.status);
       const [saved] = await r2.json(); PHOTOS.push(saved);
