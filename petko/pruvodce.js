@@ -86,21 +86,42 @@
   .tover h2 { font: italic 500 30px/1.15 var(--display); color: var(--gold-soft); margin: 0; }
   .tover p { margin: 0; max-width: 34ch; }
   .tree { width: min(300px, 80vw); height: auto; overflow: visible; }
-  .tree .b circle.ball { transition: fill .6s, filter .6s; }
-  .tree .b.got circle.ball { fill: #9c2f3a; }
-  .tree .b.empty circle.ball { fill: transparent; stroke: rgba(244,241,234,.35); stroke-dasharray: 4 4; }
-  .tree .b.lit circle.ball { fill: #e3bd6a; filter: drop-shadow(0 0 10px #f3dca5) drop-shadow(0 0 22px #e3bd6a); }
+  .tree .b { transform-box: fill-box; transform-origin: center; }
+  .tree .b circle.ball { transition: fill .6s, filter .6s; fill: url(#ppBall); }
+  .tree .b .cap { fill: #e3bd6a; }
+  .tree .b .shine { fill: #fff; opacity: .28; }
+  .tree .b.empty circle.ball { fill: rgba(255,255,255,.04); stroke: rgba(244,241,234,.4); stroke-dasharray: 4 4; }
+  .tree .b.empty .cap, .tree .b.empty .shine { opacity: 0; }
+  .tree .b.lit circle.ball { fill: #e9c877; filter: drop-shadow(0 0 10px #f3dca5) drop-shadow(0 0 22px #e3bd6a); }
+  .tree .b.new { animation: ppDrop 1.1s cubic-bezier(.3,1.4,.5,1) .35s both; }
+  .tree .b.new circle.ball { animation: ppGlow 1.8s ease-in-out 1.4s infinite; }
   .tree text.m { font-size: 18px; }
   .tree text.l { font: 700 22px var(--display); fill: #1a1406; opacity: 0; transition: opacity .5s; }
   .tree .b.lit text.l { opacity: 1; }
   .tree .b.lit text.m { opacity: 0; }
-  .slots { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
-  .slots span { width: 34px; height: 46px; border-bottom: 3px solid var(--gold); font: 700 34px/46px var(--display); color: var(--gold-soft); }
-  .slots span.gap { border: 0; width: 14px; }
-  .slots span.on { animation: pop .5s ease; }
-  @keyframes pop { 0% { transform: scale(.3); opacity: 0; } 70% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }
-  .award .ball { font-size: 64px; filter: drop-shadow(0 0 18px rgba(227,189,106,.6)); }
-  .award .env { background: var(--snow); color: #2a2318; border-radius: 6px 16px 6px 16px; padding: 12px 16px; font: 600 24px/1.2 var(--hand); transform: rotate(-1deg); }
+  .tree .lights circle { animation: ppTw 2.4s ease-in-out infinite; }
+  .tree .lights circle:nth-child(2n) { animation-delay: .8s; }
+  .tree .lights circle:nth-child(3n) { animation-delay: 1.5s; }
+  .tree .star { animation: ppStar 3s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes ppDrop { 0% { transform: translateY(-190px) scale(2.2); opacity: 0; } 55% { opacity: 1; } 100% { transform: none; opacity: 1; } }
+  @keyframes ppGlow { 0%,100% { filter: drop-shadow(0 0 4px #f3dca5); } 50% { filter: drop-shadow(0 0 14px #f3dca5) drop-shadow(0 0 26px #e3bd6a); } }
+  @keyframes ppTw { 0%,100% { opacity: .35; } 50% { opacity: 1; } }
+  @keyframes ppStar { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+  @keyframes ppFall { 0% { transform: translateY(-10vh) rotate(0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(105vh) rotate(260deg); opacity: 0; } }
+  @keyframes ppRise { from { transform: translateY(18px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .tover.award { background: radial-gradient(90% 55% at 50% 38%, rgba(227,189,106,.22), rgba(5,8,20,.96) 70%), rgba(5,8,20,.96); gap: 12px; }
+  .award .tree { width: min(190px, 48vw); }
+  .award .kick { font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+  .award h2 { font-size: 28px; }
+  .award .cnt { color: var(--muted); font-size: 15px; }
+  .award .sp { position: fixed; top: 0; color: var(--gold-soft); pointer-events: none; animation: ppFall linear infinite; }
+  .award .envl { width: min(340px, 100%); background: #f6efe0; color: #2a2318; border-radius: 6px 6px 16px 16px; padding: 30px 16px 14px; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,.5); animation: ppRise .6s ease 1.5s both; text-align: center; }
+  .award .envl::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 46px; background: linear-gradient(to bottom right, #e6dcc6 50%, transparent 50.5%) left / 50.2% 100% no-repeat, linear-gradient(to bottom left, #e6dcc6 50%, transparent 50.5%) right / 50.2% 100% no-repeat; border-radius: 6px 6px 0 0; }
+  .award .seal { position: absolute; left: 50%; top: 22px; transform: translateX(-50%); width: 44px; height: 44px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #d2525f, #8f1f2c); color: #fff; font: 700 20px/44px var(--display); box-shadow: 0 2px 6px rgba(0,0,0,.35); }
+  .award .envl .who { margin-top: 38px; font: 700 12px var(--body); letter-spacing: .14em; text-transform: uppercase; color: #9b6b1e; }
+  .award .envl .tsk { font: 600 23px/1.2 var(--hand); margin-top: 4px; }
+  .award .btn { animation: ppRise .6s ease 1.9s both; }
+  @media (prefers-reduced-motion: reduce) { .tree .b.new, .tree .b.new circle.ball, .tree .lights circle, .tree .star, .award .sp, .award .envl, .award .btn { animation: none; } .award .sp { display: none; } }
   @media (prefers-reduced-motion: reduce) { .slots span.on { animation: none; } }
   `;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
@@ -123,6 +144,7 @@
         <label for="tAuto">Číst automaticky <input type="checkbox" id="tAuto" checked></label>
         <button id="tTest">Vyzkoušet hlas</button>
         <button id="tSim">Zkušební režim (ťukni na mapu) <span id="tSimS">vyp.</span></button>
+        <button id="tReset" hidden>Vynulovat průvodce (jen pro zkoušení)</button>
       </div>
     </div>
     <div class="tsheet" id="tSheet">
@@ -174,7 +196,7 @@
   const decode = (s) => s.split('|').map(seg => seg.trim().split(/\s+/).map(p => { const [a, b] = p.split(',').map(Number); return [48 + a / 1e5, 16 + b / 1e5]; }));
 
   /* ---------- open / plan ---------- */
-  function init() { PP = window.PP; V = PP.DATA.viden; if (!V) return; updateTreeN(); }
+  function init() { PP = window.PP; V = PP.DATA.viden; if (!V) return; updateTreeN(); $('tReset').hidden = !PP.preview; }
   function open() {
     if (!V) init(); if (!V) return;
     $('tour').hidden = false; document.body.style.overflow = 'hidden';
@@ -214,6 +236,7 @@
   }
 
   /* ---------- map ---------- */
+  let lastPts = [];
   function setupMap() {
     if (!window.L) return;
     if (!map) {
@@ -221,11 +244,12 @@
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, subdomains: 'abc', attribution: '© OpenStreetMap' }).addTo(map);
       layer = L.layerGroup().addTo(map);
       map.on('dragstart', () => setFollow(false));
+      if (window.ResizeObserver) new ResizeObserver(() => { if (!map) return; map.invalidateSize(); if (!pos && !current && lastPts.length > 1) map.fitBounds(L.latLngBounds(lastPts).pad(.15)); else if (current) map.panTo([current.lat, current.lon]); }).observe($('tmap'));
       map.on('click', (e) => { if (simulate) onPos({ coords: { latitude: e.latlng.lat, longitude: e.latlng.lng, accuracy: 5 } }, true); });
     }
     layer.clearLayers(); line = null;
     const used = new Set(V.okruhy.flatMap(r => r.zastavky)); const list = route ? stops : V.miesta.filter(m => !m.typ && used.has(m.id));
-    const pts = list.map(s => [s.lat, s.lon]);
+    const pts = list.map(s => [s.lat, s.lon]); lastPts = pts;
     if (route && route.trasa) line = L.polyline(decode(route.trasa), { color: '#e3bd6a', weight: 4, opacity: .8 }).addTo(layer);
     if (route) smalls.forEach(s => L.marker([s.lat, s.lon], { icon: L.divIcon({ className: '', html: `<div class="minv${visited.has(s.id) ? ' done' : ''}"></div>`, iconSize: [14, 14], iconAnchor: [7, 7] }) }).addTo(layer).on('click', () => showStory(s, false)));
     list.forEach((s, i) => {
@@ -390,6 +414,7 @@
   $('tSkip').onclick = () => { if (!segs.length) return; si++; wi = 0; paused = false; speaking = true; cur = null; speechSynthesis.cancel(); $('tPlay').textContent = '⏸ Pauza'; next(); };
   $('tTest').onclick = () => { $('tMenu').hidden = true; unlockSpeech(); loadVoices(); speak([{ text: 'Ahoj Peťko, jsem tvůj průvodce po Vídni.' }], () => { if (!current) $('tPlayer').hidden = true; }); };
   $('tMenuBtn').onclick = () => { $('tMenu').hidden = !$('tMenu').hidden; if (!$('tMenu').hidden) loadVoices(); };
+  $('tReset').onclick = () => { ['pp-v-visited','pp-v-foto','pp-v-intro','pp-v-awarded','pp-v-revealed','pp-v-finale-started'].forEach(k => { try { localStorage.removeItem(k); } catch {} }); location.reload(); };
   $('tSim').onclick = () => { simulate = !simulate; $('tSimS').textContent = simulate ? 'zap.' : 'vyp.'; $('tMenu').hidden = true; if (simulate) { stopGps(); gps('warn', 'Zkušební režim: ťukni na mapu'); } else if (route && $('tStart').hidden) startGps(); };
 
   /* ---------- story ---------- */
@@ -399,7 +424,7 @@
     current = s; asking = null; $('tList').hidden = true;
     const small = s.typ === 'drobnost';
     const firstTime = !visited.has(s.id);
-    if (auto) markVisited(s);
+    markVisited(s);
     const el = $('tStory'); el.hidden = false; el.innerHTML = ''; $('tSheet').classList.add('tall');
     const k = document.createElement('div'); k.className = 'tkick'; k.textContent = small ? 'Drobnost cestou' : `Zastávka ${stops.indexOf(s) + 1} z ${stops.length}`;
     const kh = document.createElement('div'); kh.className = 'khead'; kh.appendChild(k);
@@ -408,13 +433,6 @@
     const h = document.createElement('h2'); h.textContent = s.nazov; el.appendChild(h);
     const p = document.createElement('p'); p.id = 'tText'; fill(p, s.text); el.appendChild(p);
     if (s.pozri && s.pozri.length) { const ul = document.createElement('ul'); ul.className = 'tlook'; ul.innerHTML = '<li class="h">Kam se podívat</li>'; s.pozri.forEach(t => { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); }); el.appendChild(ul); }
-    if (!auto && !visited.has(s.id) && !small) {
-      const box = document.createElement('div'); box.className = 'tfoto';
-      const t = document.createElement('div'); t.textContent = s.gula ? 'Tohle je jen náhled. Ozdobu dostaneš, až tu opravdu budete. Kdyby se průvodce neozval sám, ťukni sem.' : 'Tohle je jen náhled. Kdyby se průvodce na místě neozval sám, ťukni sem.';
-      const b = document.createElement('button'); b.className = 'btn'; b.textContent = 'Jsme tady';
-      b.onclick = () => { markVisited(s); box.remove(); if (!speaking) playStory(s, () => maybeAward(s)); else maybeAward(s); };
-      box.append(t, b); el.insertBefore(box, el.children[3] || null);
-    }
     if (s.foto) {
       const f = document.createElement('div'); f.className = 'tfoto';
       const done = fotoDone.has(s.id);
@@ -505,32 +523,49 @@
   function award(s, prefix) {
     if (awarded.has(s.id)) return;
     awarded.add(s.id); store.set('pp-v-awarded', [...awarded]);
+    updateTreeN();
     const n = gotGule().length, t = gulaStops().length, ov = $('tAward');
-    ov.innerHTML = '';
-    ov.className = 'tover award';
-    const ball = document.createElement('div'); ball.className = 'ball'; ball.textContent = s.gula.motiv;
-    const h = document.createElement('h2'); h.textContent = 'Nová ozdoba: ' + s.gula.nazov;
-    const p = document.createElement('p'); p.textContent = n >= t ? `Máš všech ${t} ozdob. Stromeček je kompletní. Rozsvítí se v Schönbrunnu.` : `Na stromečku už máš ${n} z ${t}. Co je uvnitř, se dozvíš později.`;
-    const env = document.createElement('div'); env.className = 'env'; env.textContent = s.gula.uloha ? `Dušan má pro tebe obálku číslo ${s.gula.poradie + 1}. Ale nejdřív: ${s.gula.uloha}` : `A Dušan má pro tebe obálku číslo ${s.gula.poradie + 1}.`;
-    const b = document.createElement('button'); b.className = 'btn'; b.textContent = s.gula.uloha ? 'Splněno, pověsit na stromeček' : 'Pověsit na stromeček';
-    b.onclick = () => { ov.hidden = true; if (!current && queue.length) showStory(queue.shift(), true); };
-    ov.append(ball, h, p);
-    if (V.obalky !== false) ov.append(env);
-    ov.append(b); ov.hidden = false;
-    if (prefix) { const pp = document.createElement('p'); pp.textContent = prefix; pp.style.color = 'var(--gold-soft)'; ov.insertBefore(pp, h); }
-    speak([{ text: (prefix ? prefix + ' ' : '') + `Nová ozdoba, ${s.gula.nazov}.` + (V.obalky !== false ? (s.gula.uloha ? ` Dušan má pro tebe obálku číslo ${s.gula.poradie + 1}. Ale nejdřív si ji musíš zasloužit. ${s.gula.uloha}` : ` A Dušan má pro tebe obálku číslo ${s.gula.poradie + 1}.`) : '') }]);
+    ov.innerHTML = ''; ov.className = 'tover award';
+    for (let i = 0; i < 16; i++) { const sp = document.createElement('span'); sp.className = 'sp'; sp.textContent = i % 3 ? '✦' : '❄'; sp.style.left = (Math.random() * 100) + 'vw'; sp.style.fontSize = (10 + Math.random() * 14) + 'px'; sp.style.animationDuration = (5 + Math.random() * 6) + 's'; sp.style.animationDelay = (-Math.random() * 8) + 's'; ov.appendChild(sp); }
+    const k = document.createElement('div'); k.className = 'kick'; k.textContent = prefix || 'Nová ozdoba na stromeček';
+    const h = document.createElement('h2'); h.textContent = `${s.gula.motiv} ${s.gula.nazov}`;
+    const w = document.createElement('div'); w.innerHTML = treeSVG('collect', s.id);
+    const c = document.createElement('div'); c.className = 'cnt'; c.textContent = n >= t ? `Máš všech ${t} ozdob. Rozsvítí se v Schönbrunnu.` : `${n} z ${t} ozdob. Co je uvnitř, se dozvíš později.`;
+    ov.append(k, h, w, c);
+    if (V.obalky !== false) {
+      const e = document.createElement('div'); e.className = 'envl';
+      e.innerHTML = '<div class="seal"></div><div class="who"></div><div class="tsk"></div>';
+      e.querySelector('.seal').textContent = s.gula.poradie + 1;
+      e.querySelector('.who').textContent = `Dušan má pro tebe obálku číslo ${s.gula.poradie + 1}`;
+      e.querySelector('.tsk').textContent = s.gula.uloha ? `Ale nejdřív: ${s.gula.uloha}` : 'Řekni si o ni.';
+      ov.appendChild(e);
+    }
+    const b = document.createElement('button'); b.className = 'btn'; b.textContent = s.gula.uloha ? 'Splněno ♥' : 'Pověsit na stromeček';
+    b.onclick = () => { ov.hidden = true; stopSpeech(); if (!current && queue.length) showStory(queue.shift(), true); };
+    ov.appendChild(b); ov.hidden = false; ov.scrollTop = 0;
+    if (navigator.vibrate) navigator.vibrate([60, 40, 60, 40, 160]);
+    speak([{ text: (prefix ? prefix + ' ' : '') + `Nová ozdoba na stromeček: ${s.gula.nazov}.` + (V.obalky !== false ? (s.gula.uloha ? ` Dušan má pro tebe obálku číslo ${s.gula.poradie + 1}. Ale nejdřív si ji musíš zasloužit. ${s.gula.uloha}` : ` A Dušan má pro tebe obálku číslo ${s.gula.poradie + 1}.`) : '') }]);
   }
-  function treeSVG(mode) {
+  function treeSVG(mode, newId) {
     // mode: 'collect' (shows emojis) | 'reveal' (letters hidden until lit)
-    const pos8 = [[150, 95], [118, 150], [182, 150], [95, 210], [150, 205], [205, 210], [80, 268], [220, 268]];
+    const pos8 = [[150, 98], [121, 160], [179, 160], [101, 222], [150, 216], [199, 222], [80, 278], [220, 278]];
     const all = gulaStops(), L8 = letters();
-    let s = `<svg class="tree" viewBox="0 0 300 330" role="img" aria-label="Stromeček s ozdobami">
-      <polygon points="150,20 40,300 260,300" fill="#14402f"/><polygon points="150,20 70,180 230,180" fill="#1b5a40"/>
-      <rect x="135" y="300" width="30" height="24" fill="#5b3a1e"/>
-      <text x="150" y="30" text-anchor="middle" font-size="28">⭐</text>`;
+    let s = `<svg class="tree" viewBox="0 0 300 345" role="img" aria-label="Stromeček s ozdobami">
+      <defs>
+        <linearGradient id="ppT" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a7a57"/><stop offset="1" stop-color="#0e3a29"/></linearGradient>
+        <radialGradient id="ppBall" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#e86b76"/><stop offset="1" stop-color="#8a1c29"/></radialGradient>
+      </defs>
+      <ellipse cx="150" cy="322" rx="120" ry="12" fill="#f4f1ea" opacity=".14"/>
+      <rect x="136" y="296" width="28" height="28" rx="3" fill="#5b3a1e"/>
+      <polygon points="150,128 34,304 266,304" fill="url(#ppT)"/>
+      <polygon points="150,70 62,214 238,214" fill="url(#ppT)"/>
+      <polygon points="150,22 92,124 208,124" fill="url(#ppT)"/>
+      <path d="M100 118 Q150 142 200 118 M72 206 Q150 240 228 206 M46 296 Q150 330 254 296" fill="none" stroke="#e3bd6a" stroke-width="1.5" opacity=".45"/>
+      <g class="lights" fill="#f3dca5"><circle cx="118" cy="124" r="2.5"/><circle cx="150" cy="131" r="2.5"/><circle cx="182" cy="124" r="2.5"/><circle cx="92" cy="214" r="2.5"/><circle cx="130" cy="225" r="2.5"/><circle cx="170" cy="225" r="2.5"/><circle cx="208" cy="214" r="2.5"/><circle cx="70" cy="304" r="2.5"/><circle cx="115" cy="314" r="2.5"/><circle cx="185" cy="314" r="2.5"/><circle cx="230" cy="304" r="2.5"/></g>
+      <text class="star" x="150" y="32" text-anchor="middle" font-size="30">⭐</text>`;
     all.forEach((m, i) => {
       const [x, y] = pos8[i] || [150, 150]; const got = visited.has(m.id);
-      s += `<g class="b ${got ? 'got' : 'empty'}" data-i="${i}"><circle class="ball" cx="${x}" cy="${y}" r="21"/>` +
+      s += `<g class="b ${got ? 'got' : 'empty'}${m.id === newId ? ' new' : ''}" data-i="${i}"><rect class="cap" x="${x - 4}" y="${y - 26}" width="8" height="7" rx="2"/><circle class="ball" cx="${x}" cy="${y}" r="20"/><ellipse class="shine" cx="${x - 7}" cy="${y - 8}" rx="6" ry="4"/>` +
         `<text class="m" x="${x}" y="${y + 6}" text-anchor="middle">${got ? m.gula.motiv : ''}</text>` +
         `<text class="l" x="${x}" y="${y + 8}" text-anchor="middle">${mode === 'reveal' ? L8[m.gula.poradie] || '' : ''}</text></g>`;
     });
