@@ -159,6 +159,7 @@
   const visited = new Set(store.get('pp-v-visited', []));
   const fotoDone = new Set(store.get('pp-v-foto', []));
   const intro = new Set(store.get('pp-v-intro', []));
+  const awarded = new Set(store.get('pp-v-awarded', []));
   const settings = Object.assign({ rate: 1, auto: true, voice: '' }, store.get('pp-v-set', {}));
   const save = () => { store.set('pp-v-visited', [...visited]); store.set('pp-v-foto', [...fotoDone]); store.set('pp-v-intro', [...intro]); store.set('pp-v-set', settings); };
 
@@ -257,6 +258,7 @@
       b.querySelector('.n').textContent = visited.has(s.id) ? '✓' : i + 1;
       b.querySelector('.nm').textContent = s.nazov + (s.gula && !visited.has(s.id) ? ' 🎁' : '');
       if (s.druh) { const g = document.createElement('span'); g.className = 'badge ' + (s.druh === 'romantika' ? 'r' : 'k'); g.textContent = s.druh === 'romantika' ? '♥ Romantika' : 'Klasika'; b.appendChild(g); }
+      b.onclick = () => showStory(s, false);
       box.appendChild(b);
     });
     if (smalls.length) { const p = document.createElement('p'); p.style.cssText = 'margin:10px 0 0;font-size:14px;color:var(--muted)'; p.textContent = `A cestou ${smalls.length} ${smalls.length === 1 ? 'drobnost' : smalls.length < 5 ? 'drobnosti' : 'drobností'}, o kterých se dozvíš, až půjdeš kolem.`; box.appendChild(p); }
@@ -291,7 +293,7 @@
   }
   function check(instant) {
     if (!pos || pos.acc > 90 || !route) return;
-    const busy = !!current || speaking || asking;
+    const busy = !!current || !!asking;
     const inZone = (s) => dist(pos, s) <= (s.polomer || 35) + Math.min(pos.acc, 15);
     const cand = stops.filter(s => !visited.has(s.id) && s !== current && !queue.includes(s)).filter(inZone);
     stops.forEach(s => { if (!cand.includes(s)) dwell[s.id] = 0; });
@@ -302,7 +304,7 @@
       if (!busy) showStory(queue.shift(), true);
       return;
     }
-    if (!busy) { const sm = smalls.find(s => !visited.has(s.id) && dist(pos, s) <= (s.polomer || 20) + Math.min(pos.acc, 10)); if (sm) showStory(sm, true); }
+    if (!busy && !speaking) { const sm = smalls.find(s => !visited.has(s.id) && dist(pos, s) <= (s.polomer || 20) + Math.min(pos.acc, 10)); if (sm) showStory(sm, true); }
   }
   function ask(s) {
     asking = s; const el = $('tStory'); el.hidden = false; el.innerHTML = '';
@@ -373,7 +375,9 @@
     u.onend = () => { if (speaking && !paused && cur === u) { wi++; next(); } };
     u.onerror = (e) => { if (speaking && !paused && cur === u && e.error !== 'interrupted' && e.error !== 'canceled') { wi++; next(); } };
     speechSynthesis.speak(u);
+    clearTimeout(watchdog); watchdog = setTimeout(() => { if (speaking && !paused && cur === u) { try { speechSynthesis.cancel(); } catch {} wi++; next(); } }, (t.length * 110) / Math.max(.5, settings.rate) + 6000);
   }
+  let watchdog = 0;
   function stopSpeech() { speaking = false; paused = false; cur = null; try { speechSynthesis.cancel(); } catch {} hl(null); }
   function hl(n) { document.querySelectorAll('#tStory .sentence.now').forEach(e => e.classList.remove('now')); if (n) { n.classList.add('now'); n.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } }
   function fill(el, text) { el.innerHTML = ''; split(text).forEach(t => { const s = document.createElement('span'); s.className = 'sentence'; s.textContent = t; el.appendChild(s); }); }
@@ -392,7 +396,7 @@
   function showStory(s, auto, quiet) {
     if (s.finale) return;
     if (current && current !== s) stopSpeech();
-    current = s; asking = null;
+    current = s; asking = null; $('tList').hidden = true;
     const small = s.typ === 'drobnost';
     const firstTime = !visited.has(s.id);
     if (auto) markVisited(s);
@@ -404,7 +408,13 @@
     const h = document.createElement('h2'); h.textContent = s.nazov; el.appendChild(h);
     const p = document.createElement('p'); p.id = 'tText'; fill(p, s.text); el.appendChild(p);
     if (s.pozri && s.pozri.length) { const ul = document.createElement('ul'); ul.className = 'tlook'; ul.innerHTML = '<li class="h">Kam se podívat</li>'; s.pozri.forEach(t => { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); }); el.appendChild(ul); }
-    if (!auto && !visited.has(s.id) && !small) { const b = document.createElement('button'); b.className = 'btn'; b.textContent = 'Jsme tady'; b.onclick = () => { markVisited(s); b.remove(); playStory(s, () => { if (s.gula) { if (s.lety) awardAfterLanding(s); else award(s); } }); }; el.appendChild(b); }
+    if (!auto && !visited.has(s.id) && !small) {
+      const box = document.createElement('div'); box.className = 'tfoto';
+      const t = document.createElement('div'); t.textContent = s.gula ? 'Tohle je jen náhled. Ozdobu dostaneš, až tu opravdu budete. Kdyby se průvodce neozval sám, ťukni sem.' : 'Tohle je jen náhled. Kdyby se průvodce na místě neozval sám, ťukni sem.';
+      const b = document.createElement('button'); b.className = 'btn'; b.textContent = 'Jsme tady';
+      b.onclick = () => { markVisited(s); box.remove(); if (!speaking) playStory(s, () => maybeAward(s)); else maybeAward(s); };
+      box.append(t, b); el.insertBefore(box, el.children[3] || null);
+    }
     if (s.foto) {
       const f = document.createElement('div'); f.className = 'tfoto';
       const done = fotoDone.has(s.id);
@@ -430,9 +440,8 @@
     setupMap();
     if (navigator.vibrate && auto) navigator.vibrate(small ? [80] : [120, 60, 120]);
     if (s.lety) heartBox(s, el);
-    const give = () => { if (s.lety) awardAfterLanding(s); else award(s); };
-    if (auto && !settings.auto) { $('tPlay').textContent = '▶ Přehrát'; if (s.gula && firstTime) give(); return; }
-    playStory(s, () => { if (s.gula && firstTime && (auto || visited.has(s.id))) give(); });
+    if (auto && !settings.auto) { $('tPlay').textContent = '▶ Přehrát'; maybeAward(s); return; }
+    playStory(s, () => maybeAward(s));
   }
   /* ---------- flying heart ---------- */
   function nextFlight(s) {
@@ -460,6 +469,11 @@
     tick(); clearInterval(heartTimer); heartTimer = setInterval(() => { if (!document.getElementById('tHeart')) { clearInterval(heartTimer); return; } tick(); }, 1000);
   }
   let heartAwardTimer = null;
+  function maybeAward(s) {
+    if (!s || !s.gula || !visited.has(s.id) || awarded.has(s.id)) return;
+    if (!$('tAward').hidden) return;
+    if (s.lety) awardAfterLanding(s); else award(s);
+  }
   function awardAfterLanding(s) {
     const f = nextFlight(s);
     if (!f) { award(s); return; }
@@ -478,14 +492,19 @@
   function playStory(s, done) { const list = [{ text: s.text, node: $('tText') }]; const hl2 = s.lety && heartLine(s); if (hl2) list.push({ text: hl2 }); const tr = transition(s); if (tr) list.push({ text: tr }); speak(list, done); }
   function markVisited(s) { const was = visited.has(s.id); visited.add(s.id); save(); updateTreeN(); if (!was) setupMap(); }
   $('tClose').onclick = () => {
+    const was = current;
     stopSpeech(); $('tStory').hidden = true; $('tPlayer').hidden = true; $('tSheet').classList.remove('tall');
     current = null; updateNext(); setupMap(); setFollow(true);
+    if (!$('tStart').hidden && route && route.id !== 'finale') { renderList(); $('tList').hidden = false; }
+    if (was && was.gula && visited.has(was.id) && !awarded.has(was.id)) { if (was.lety && nextFlight(was) && (nextFlight(was) - PP.now()) < 35 * 60000) awardAfterLanding(was); else award(was); return; }
     if (queue.length) showStory(queue.shift(), true);
   };
 
   /* ---------- ornaments ---------- */
   function updateTreeN() { if (!V) return; $('tTreeN').textContent = `${gotGule().length}/${gulaStops().length}`; }
   function award(s, prefix) {
+    if (awarded.has(s.id)) return;
+    awarded.add(s.id); store.set('pp-v-awarded', [...awarded]);
     const n = gotGule().length, t = gulaStops().length, ov = $('tAward');
     ov.innerHTML = '';
     ov.className = 'tover award';
@@ -494,7 +513,7 @@
     const p = document.createElement('p'); p.textContent = n >= t ? `Máš všech ${t} ozdob. Stromeček je kompletní. Rozsvítí se v Schönbrunnu.` : `Na stromečku už máš ${n} z ${t}. Co je uvnitř, se dozvíš později.`;
     const env = document.createElement('div'); env.className = 'env'; env.textContent = s.gula.uloha ? `Dušan má pro tebe obálku číslo ${s.gula.poradie + 1}. Ale nejdřív: ${s.gula.uloha}` : `A Dušan má pro tebe obálku číslo ${s.gula.poradie + 1}.`;
     const b = document.createElement('button'); b.className = 'btn'; b.textContent = s.gula.uloha ? 'Splněno, pověsit na stromeček' : 'Pověsit na stromeček';
-    b.onclick = () => { ov.hidden = true; };
+    b.onclick = () => { ov.hidden = true; if (!current && queue.length) showStory(queue.shift(), true); };
     ov.append(ball, h, p);
     if (V.obalky !== false) ov.append(env);
     ov.append(b); ov.hidden = false;
