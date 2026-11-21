@@ -126,7 +126,7 @@ const norm = (s) => s.toUpperCase().replace(/[^A-Z0-9ÁČĎÉĚÍŇÓŘŠŤÚŮ�
 const unb64 = (s) => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 const split = (t) => t.match(/[^.!?]+[.!?]+["“”]?\s*|[^.!?]+$/g) || [t];
 const fnv = (str) => { let x = 0x811c9dc5; for (const b of new TextEncoder().encode(str)) { x ^= b; x = Math.imul(x, 0x01000193) >>> 0; } return x.toString(16).padStart(8, '0'); };
-let V = null, ENC = null, GROUPS = [];
+let V = null, ENC = null, GROUPS = [], EXIST = new Set();
 function buildGroups() {
   const by = (id) => V.miesta.find(m => m.id === id);
   const award = (s, prefix) => (prefix ? prefix + ' ' : '') + `Nová ozdoba na stromeček: ${s.gula.nazov}.` + (V.obalky !== false ? (s.gula.uloha ? ` Dušan má pro tebe obálku číslo ${s.gula.poradie + 1}. Ale nejdřív si ji musíš zasloužit. ${s.gula.uloha}` : ` A Dušan má pro tebe obálku číslo ${s.gula.poradie + 1}.`) : '');
@@ -146,16 +146,17 @@ function buildGroups() {
   });
   GROUPS[0].base.unshift('Ahoj Peťko, jsem tvůj průvodce po Vídni.');
   const box = $('routes'); box.innerHTML = '';
-  GROUPS.forEach((g, i) => { const l = document.createElement('label'); l.style.cssText = 'display:flex;gap:8px;align-items:center;color:var(--ink)'; l.innerHTML = `<input type="checkbox" data-i="${i}" style="width:auto"${i === 0 ? ' checked' : ''}> <span></span>`; l.querySelector('span').textContent = g.nazov; box.appendChild(l); });
+  GROUPS.forEach((g, i) => { const l = document.createElement('label'); l.style.cssText = 'display:flex;gap:8px;align-items:center;color:var(--ink)'; l.innerHTML = `<input type="checkbox" data-i="${i}" style="width:auto" checked> <span></span>`; l.querySelector('span').textContent = g.nazov; box.appendChild(l); });
   box.onchange = recompute; $('viac').onchange = recompute; recompute();
 }
 function recompute() {
   const ctx = new Map();
   const sel = [...document.querySelectorAll('#routes input:checked')].map(x => GROUPS[+x.dataset.i]);
   sel.forEach(g => [...g.base, ...($('viac').checked ? g.extra : [])].forEach(str => { const p = split(str).map(x => x.trim()).filter(Boolean); p.forEach((x, i) => { if (!ctx.has(x)) ctx.set(x, { p: p[i - 1] || '', n: p[i + 1] || '' }); }); }));
-  S = [...ctx].map(([t, c]) => ({ h: fnv(t), t, p: c.p, n: c.n }));
+  const all = [...ctx].map(([t, c]) => ({ h: fnv(t), t, p: c.p, n: c.n }));
+  S = all.filter(x => !EXIST.has(x.h));
   const ch = S.reduce((n, x) => n + x.t.length, 0);
-  $('sum').textContent = `${S.length} viet, ${ch.toLocaleString('sk-SK')} znakov (približne toľko kreditov).`;
+  $('sum').textContent = `Treba nahovoriť ${S.length} viet, ${ch.toLocaleString('sk-SK')} znakov (približne toľko kreditov).` + (all.length > S.length ? ` Ďalších ${all.length - S.length} viet už nahratých je, tie sa preskočia.` : '');
   progress();
 }
 $('unlock').onclick = async () => {
@@ -167,6 +168,7 @@ $('unlock').onclick = async () => {
     V = D.viden; if (!V) throw new Error('Vo zverejnenom obsahu chýba Viedeň');
     const b2 = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
     ENC = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: new TextEncoder().encode('dudko-hlas-viden'), iterations: 150000, hash: 'SHA-256' }, b2, { name: 'AES-GCM', length: 256 }, false, ['encrypt']);
+    try { const r = await fetch('../petko/hlas/index.json', { cache: 'no-store' }); if (r.ok) EXIST = new Set(await r.json()); } catch {}
     $('pick').hidden = false; $('unlock').textContent = 'Odomknuté ✓'; $('unlock').disabled = true; $('pw').disabled = true; buildGroups();
   } catch (e) { alert('Heslo nesedí alebo sa obsah nepodarilo otvoriť.\n' + e.message); }
 };
@@ -220,7 +222,7 @@ $('go').onclick = async () => {
   for (const s of S) {
     if (stopFlag) break; if (done.has(s.h)) continue;
     try { const b = await enc(await tts(s.t, s.p, s.n)); done.set(s.h, b); progress(); }
-    catch (e) { log(`Chyba pri vete: „${s.t.slice(0, 60)}…“ → ${e.message}`, 'err'); if (/401|quota|credit|402/i.test(e.message)) { log('Asi došiel kredit alebo je zlý kľúč. Stiahni to, čo je hotové, a pošli to.', 'err'); break; } }
+    catch (e) { log(`Chyba pri vete: „${s.t.slice(0, 60)}…“ → ${e.message}`, 'err'); if (/401|402|quota|credit|limit/i.test(e.message)) { log('Asi došiel kredit alebo je zlý kľúč. Stiahni to, čo je hotové, a pošli to.', 'err'); break; } }
   }
   running = false; $('go').disabled = false; $('stop').disabled = true; ['voice','model','stab','sim','sty','spd'].forEach(id => $(id).disabled = false);
   if (S.every(x => done.has(x.h))) { $('stat').innerHTML = '<span class="okc">Všetko hotové ✓</span> Stiahni súbor v kroku 4.'; $('go').textContent = 'Hotovo'; document.body.dataset.hotovo = run; }
@@ -246,7 +248,7 @@ function zip(files) {
 }
 $('zip').onclick = () => {
   const files = [...done].map(([h, d]) => ['hlas/' + h + '.bin', d]);
-  files.push(['hlas/index.json', new TextEncoder().encode(JSON.stringify([...done.keys()]))]);
+  files.push(['hlas/index.json', new TextEncoder().encode(JSON.stringify([...new Set([...EXIST, ...done.keys()])]))]);
   const a = document.createElement('a'); a.href = URL.createObjectURL(zip(files)); a.download = ZIPNAME; a.click();
 };
 progress();
