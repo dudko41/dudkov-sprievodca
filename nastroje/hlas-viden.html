@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hlas pre sprievodcu: Viedeň</title>
+<style>
+  :root { --bg:#f6f3ee; --card:#fff; --ink:#1d1b18; --muted:#6b655c; --line:#e4ded4; --acc:#b8322c; --ok:#2f7d4f; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+  main { max-width:720px; margin:0 auto; padding:24px 16px 60px; }
+  h1 { font-size:26px; margin:0 0 4px; }
+  .sub { color:var(--muted); margin:0 0 20px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin:0 0 14px; }
+  .card h2 { font-size:17px; margin:0 0 10px; }
+  .n { display:inline-grid; place-items:center; width:24px; height:24px; border-radius:50%; background:var(--ink); color:#fff; font-size:13px; margin-right:8px; }
+  label { display:block; font-size:14px; color:var(--muted); margin:10px 0 4px; }
+  input, select { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font:inherit; background:#fff; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+  button { padding:11px 16px; border-radius:10px; border:0; background:var(--ink); color:#fff; font:inherit; font-weight:600; cursor:pointer; }
+  button.ghost { background:transparent; color:var(--ink); border:1px solid var(--line); }
+  button.acc { background:var(--acc); }
+  button:disabled { opacity:.45; cursor:default; }
+  .note { font-size:14px; color:var(--muted); margin:8px 0 0; }
+  .bar { height:10px; background:var(--line); border-radius:6px; overflow:hidden; margin:12px 0 6px; }
+  .bar i { display:block; height:100%; width:0; background:var(--ok); transition:width .2s; }
+  .log { font:13px/1.45 ui-monospace,Menlo,monospace; background:#faf8f4; border:1px solid var(--line); border-radius:10px; padding:10px; max-height:180px; overflow:auto; white-space:pre-wrap; margin-top:10px; }
+  .err { color:var(--acc); }
+  .okc { color:var(--ok); font-weight:600; }
+  .sliders { display:grid; grid-template-columns:1fr 1fr; gap:6px 14px; }
+  .sliders input { padding:0; }
+  @media (max-width:520px) { .sliders { grid-template-columns:1fr; } }
+</style>
+<script src="../petko/obsah.js?v=22"></script>
+</head>
+<body>
+<main>
+  <h1>Hlas pre sprievodcu: Viedeň</h1>
+  <p class="sub">Texty sú zašifrované. Najprv zadaj heslo k Peťkovej stránke, potom vyber, čo nahovoriť.</p>
+  <section class="card">
+    <h2><span class="n">0</span>Heslo a výber trás</h2>
+    <label for="pw">Heslo k Peťkovej stránke</label>
+    <input id="pw" type="password" autocomplete="off">
+    <div class="row"><button id="unlock">Odomknúť</button></div>
+    <div id="pick" hidden>
+      <label>Ktoré časti nahovoriť</label>
+      <div id="routes"></div>
+      <label style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input id="viac" type="checkbox" style="width:auto"> aj rozšírené texty „Víc“</label>
+      <p class="note" id="sum"></p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="n">1</span>Kľúč k ElevenLabs</h2>
+    <label for="key">API kľúč (ElevenLabs → Developers → API Keys)</label>
+    <input id="key" type="password" autocomplete="off" placeholder="sk_…">
+    <p class="note">Kľúč ostáva len v tomto okne prehliadača a posiela sa jedine na api.elevenlabs.io. Nikam sa neukladá. Po zatvorení okna zmizne.</p>
+    <div class="row"><button id="loadV">Načítať hlasy</button></div>
+  </section>
+
+  <section class="card">
+    <h2><span class="n">2</span>Hlas a nastavenie</h2>
+    <label for="voice">Hlas</label>
+    <select id="voice" disabled><option>Najprv načítaj hlasy</option></select>
+    <label for="model">Model</label>
+    <select id="model">
+      <option value="eleven_multilingual_v2">Multilingual v2 (najprirodzenejší, odporúčam)</option>
+      <option value="eleven_turbo_v2_5">Turbo v2.5 (rýchlejší)</option>
+      <option value="eleven_flash_v2_5">Flash v2.5 (najrýchlejší)</option>
+    </select>
+    <div class="sliders">
+      <div><label for="stab">Stabilita: <b id="stabV">0.50</b></label><input id="stab" type="range" min="0" max="1" step="0.05" value="0.5"></div>
+      <div><label for="sim">Podobnosť hlasu: <b id="simV">0.75</b></label><input id="sim" type="range" min="0" max="1" step="0.05" value="0.75"></div>
+      <div><label for="sty">Výraznosť: <b id="styV">0.00</b></label><input id="sty" type="range" min="0" max="1" step="0.05" value="0"></div>
+      <div><label for="spd">Rýchlosť: <b id="spdV">1.00</b></label><input id="spd" type="range" min="0.8" max="1.2" step="0.05" value="1"></div>
+    </div>
+    <p class="note">Menšia stabilita znie živšie, ale niekedy nevyrovnane. Ak sa ti hlas nepáči, skús iný hlas, nie posuvníky.</p>
+    <label for="sample">Skúšobná veta</label>
+    <input id="sample" value="Stojíte před Vídeňskou státní operou. Tady začíná náš vánoční víkend.">
+    <div class="row"><button id="test" class="ghost" disabled>▶ Vyskúšať hlas</button></div>
+    <p class="note">Jedno vyskúšanie minie len pár desiatok znakov z kreditu.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="n">3</span>Nahovoriť všetko</h2>
+    <div class="row">
+      <button id="go" class="acc" disabled>Nahovoriť vybrané</button>
+      <button id="stop" class="ghost" disabled>Zastaviť</button>
+    </div>
+    <div class="bar"><i id="bar"></i></div>
+    <div id="stat" class="note">Pripravené.</div>
+    <code id="dir" hidden></code>
+    <div id="log" class="log" hidden></div>
+  </section>
+
+  <section class="card">
+    <h2><span class="n">4</span>Stiahnuť a poslať</h2>
+    <div class="row"><button id="zip" disabled>⬇ Stiahnuť hlas-viden.zip</button></div>
+    <p class="note">Stiahnutý súbor pretiahni do chatu s Claudom. Ak sa generovanie preruší, stlač znova „Nahovoriť“ a bude pokračovať, kde skončilo.</p>
+  </section>
+</main>
+
+<script>
+let S = [];
+const ZIPNAME = 'hlas-viden.zip';
+const $ = (id) => document.getElementById(id);
+const done = new Map();
+const SB = { url: 'https://jmyyicckcoajvknijqar.supabase.co', key: 'sb_publishable_SSTmY56jOpgPNKz5lE1OLg_mdYcc8dG', bucket: 'fotky' };
+const PREFIX = '';
+let run = '', runFor = '';
+async function upload(path, data, type) {
+  for (let a = 0; a < 3; a++) {
+    const r = await fetch(`${SB.url}/storage/v1/object/${SB.bucket}/${path}`, { method: 'POST', headers: { apikey: SB.key, Authorization: 'Bearer ' + SB.key, 'Content-Type': type, 'x-upsert': 'false' }, body: data });
+    if (r.ok) return; const t = await r.text(); if (/exists|Duplicate/i.test(t)) return;
+    if (a === 2) throw new Error('Supabase ' + r.status + ' ' + t.slice(0, 200));
+    await new Promise(s => setTimeout(s, 1000));
+  }
+}
+let voices = [], stopFlag = false, running = false;
+
+['stab','sim','sty','spd'].forEach(id => { const f = () => $(id + 'V').textContent = (+$(id).value).toFixed(2); $(id).oninput = f; f(); });
+const key = () => $('key').value.trim();
+const log = (t, cls) => { const l = $('log'); l.hidden = false; const d = document.createElement('div'); if (cls) d.className = cls; d.textContent = t; l.appendChild(d); l.scrollTop = l.scrollHeight; };
+
+const norm = (s) => s.toUpperCase().replace(/[^A-Z0-9ÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]/g, '');
+const unb64 = (s) => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+const split = (t) => t.match(/[^.!?]+[.!?]+["“”]?\s*|[^.!?]+$/g) || [t];
+const fnv = (str) => { let x = 0x811c9dc5; for (const b of new TextEncoder().encode(str)) { x ^= b; x = Math.imul(x, 0x01000193) >>> 0; } return x.toString(16).padStart(8, '0'); };
+let V = null, ENC = null, GROUPS = [];
+function buildGroups() {
+  const by = (id) => V.miesta.find(m => m.id === id);
+  const award = (s, prefix) => (prefix ? prefix + ' ' : '') + `Nová ozdoba na stromeček: ${s.gula.nazov}.` + (V.obalky !== false ? (s.gula.uloha ? ` Dušan má pro tebe obálku číslo ${s.gula.poradie + 1}. Ale nejdřív si ji musíš zasloužit. ${s.gula.uloha}` : ` A Dušan má pro tebe obálku číslo ${s.gula.poradie + 1}.`) : '');
+  GROUPS = V.okruhy.map(r => {
+    const base = [], extra = [];
+    if (r.id === 'finale') { const f = V.finale; [f.text, f.uvodOdhaleni, V.tajenka.replace(/♥/g, '').trim().toLowerCase() + '.', f.poOdhaleni].forEach(x => x && base.push(x)); }
+    else {
+      if (r.uvod) base.push(r.uvod);
+      [...r.zastavky, ...(r.drobnosti || [])].map(by).filter(Boolean).forEach(m => {
+        if (m.text) base.push(m.text); if (m.viac) extra.push(m.viac);
+        if (r.cestou && r.cestou[m.id]) base.push(r.cestou[m.id]);
+        if (m.gula) { base.push(award(m)); if (m.lety) base.push(award(m, 'Srdce přistálo na stromě.')); }
+      });
+      if (r.zaver) base.push(r.zaver);
+    }
+    return { id: r.id, nazov: r.nazov, base, extra };
+  });
+  GROUPS[0].base.unshift('Ahoj Peťko, jsem tvůj průvodce po Vídni.');
+  const box = $('routes'); box.innerHTML = '';
+  GROUPS.forEach((g, i) => { const l = document.createElement('label'); l.style.cssText = 'display:flex;gap:8px;align-items:center;color:var(--ink)'; l.innerHTML = `<input type="checkbox" data-i="${i}" style="width:auto"${i === 0 ? ' checked' : ''}> <span></span>`; l.querySelector('span').textContent = g.nazov; box.appendChild(l); });
+  box.onchange = recompute; $('viac').onchange = recompute; recompute();
+}
+function recompute() {
+  const ctx = new Map();
+  const sel = [...document.querySelectorAll('#routes input:checked')].map(x => GROUPS[+x.dataset.i]);
+  sel.forEach(g => [...g.base, ...($('viac').checked ? g.extra : [])].forEach(str => { const p = split(str).map(x => x.trim()).filter(Boolean); p.forEach((x, i) => { if (!ctx.has(x)) ctx.set(x, { p: p[i - 1] || '', n: p[i + 1] || '' }); }); }));
+  S = [...ctx].map(([t, c]) => ({ h: fnv(t), t, p: c.p, n: c.n }));
+  const ch = S.reduce((n, x) => n + x.t.length, 0);
+  $('sum').textContent = `${S.length} viet, ${ch.toLocaleString('sk-SK')} znakov (približne toľko kreditov).`;
+  progress();
+}
+$('unlock').onclick = async () => {
+  try {
+    const O = window.OBSAH, pw = norm($('pw').value);
+    const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+    const key = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: unb64(O.salt), iterations: O.it, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+    const D = JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(O.iv) }, key, unb64(O.ct))));
+    V = D.viden; if (!V) throw new Error('Vo zverejnenom obsahu chýba Viedeň');
+    const b2 = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+    ENC = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: new TextEncoder().encode('dudko-hlas-viden'), iterations: 150000, hash: 'SHA-256' }, b2, { name: 'AES-GCM', length: 256 }, false, ['encrypt']);
+    $('pick').hidden = false; $('unlock').textContent = 'Odomknuté ✓'; $('unlock').disabled = true; $('pw').disabled = true; buildGroups();
+  } catch (e) { alert('Heslo nesedí alebo sa obsah nepodarilo otvoriť.\n' + e.message); }
+};
+async function enc(data) { const iv = crypto.getRandomValues(new Uint8Array(12)); const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, ENC, data)); const out = new Uint8Array(12 + ct.length); out.set(iv); out.set(ct, 12); return out; }
+
+$('loadV').onclick = async () => {
+  if (!key()) { alert('Najprv vlož API kľúč.'); return; }
+  $('loadV').disabled = true; $('loadV').textContent = 'Načítavam…';
+  try {
+    const r = await fetch('https://api.elevenlabs.io/v1/voices', { headers: { 'xi-api-key': key() } });
+    if (!r.ok) throw new Error(r.status + ' ' + (await r.text()).slice(0, 200));
+    const j = await r.json(); voices = j.voices || [];
+    const sel = $('voice'); sel.innerHTML = '';
+    voices.sort((a, b) => a.name.localeCompare(b.name)).forEach(v => { const o = document.createElement('option'); o.value = v.voice_id; const l = v.labels || {}; o.textContent = [v.name, l.gender, l.accent, l.description || l.descriptive, l.language].filter(Boolean).join(' · '); sel.appendChild(o); });
+    sel.disabled = !voices.length; $('test').disabled = !voices.length; $('go').disabled = !voices.length || !V;
+    $('loadV').textContent = `Načítané (${voices.length})`;
+  } catch (e) { alert('Hlasy sa nepodarilo načítať. Skontroluj kľúč.\n\n' + e.message); $('loadV').textContent = 'Načítať hlasy'; }
+  $('loadV').disabled = false;
+};
+
+async function tts(text, prev, next) {
+  const body = { text, model_id: $('model').value, voice_settings: { stability: +$('stab').value, similarity_boost: +$('sim').value, style: +$('sty').value, use_speaker_boost: true, speed: +$('spd').value } };
+  if (prev) body.previous_text = prev; if (next) body.next_text = next;
+  for (let a = 0; a < 4; a++) {
+    const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${$('voice').value}?output_format=mp3_44100_64`, { method: 'POST', headers: { 'xi-api-key': key(), 'Content-Type': 'application/json', 'Accept': 'audio/mpeg' }, body: JSON.stringify(body) });
+    if (r.ok) return new Uint8Array(await r.arrayBuffer());
+    const msg = (await r.text()).slice(0, 300);
+    if (r.status === 429 || r.status >= 500) { await new Promise(s => setTimeout(s, 1500 * (a + 1))); continue; }
+    throw new Error(r.status + ' ' + msg);
+  }
+  throw new Error('Server je preťažený, skús o chvíľu znova.');
+}
+
+$('test').onclick = async () => {
+  $('test').disabled = true; $('test').textContent = 'Generujem…';
+  try { const b = await tts($('sample').value.trim()); const a = new Audio(URL.createObjectURL(new Blob([b], { type: 'audio/mpeg' }))); a.play(); }
+  catch (e) { alert('Nepodarilo sa: ' + e.message); }
+  $('test').disabled = false; $('test').textContent = '▶ Vyskúšať hlas';
+};
+
+function progress() {
+  const n = S.filter(x => done.has(x.h)).length; $('bar').style.width = (S.length ? n / S.length * 100 : 0) + '%';
+  $('stat').textContent = `Hotovo ${n} z ${S.length} viet.`; $('zip').disabled = done.size === 0;
+}
+$('go').onclick = async () => {
+  if (running) return; running = true; stopFlag = false;
+  $('go').disabled = true; $('stop').disabled = false; ['voice','model','stab','sim','sty','spd'].forEach(id => $(id).disabled = true);
+  const sig = $('voice').value + '|' + $('model').value + '|' + ['stab','sim','sty','spd'].map(id => $(id).value).join(',');
+  if (sig !== runFor) { if (runFor && done.size && !confirm('Zmenil si hlas alebo nastavenie. Doteraz nahovorené vety sa zahodia. Pokračovať?')) { running = false; $('go').disabled = false; $('stop').disabled = true; ['voice','model','stab','sim','sty','spd'].forEach(id => $(id).disabled = false); return; } runFor = sig; done.clear(); progress(); }
+  $('dir').textContent = run;
+  for (const s of S) {
+    if (stopFlag) break; if (done.has(s.h)) continue;
+    try { const b = await enc(await tts(s.t, s.p, s.n)); done.set(s.h, b); progress(); }
+    catch (e) { log(`Chyba pri vete: „${s.t.slice(0, 60)}…“ → ${e.message}`, 'err'); if (/401|quota|credit|402/i.test(e.message)) { log('Asi došiel kredit alebo je zlý kľúč. Stiahni to, čo je hotové, a pošli to.', 'err'); break; } }
+  }
+  running = false; $('go').disabled = false; $('stop').disabled = true; ['voice','model','stab','sim','sty','spd'].forEach(id => $(id).disabled = false);
+  if (S.every(x => done.has(x.h))) { $('stat').innerHTML = '<span class="okc">Všetko hotové ✓</span> Stiahni súbor v kroku 4.'; $('go').textContent = 'Hotovo'; document.body.dataset.hotovo = run; }
+  else $('go').textContent = 'Pokračovať';
+};
+$('stop').onclick = () => { stopFlag = true; $('stop').disabled = true; };
+
+/* ZIP bez kompresie */
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return (d) => { let c = 0xffffffff; for (let i = 0; i < d.length; i++) c = t[(c ^ d[i]) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; }; })();
+function zip(files) {
+  const enc = new TextEncoder(), parts = [], cen = []; let off = 0;
+  for (const [name, data] of files) {
+    const nb = enc.encode(name), crc = CRC(data), h = new DataView(new ArrayBuffer(30));
+    h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(8, 0, true); h.setUint32(14, crc, true); h.setUint32(18, data.length, true); h.setUint32(22, data.length, true); h.setUint16(26, nb.length, true);
+    parts.push(new Uint8Array(h.buffer), nb, data);
+    const c = new DataView(new ArrayBuffer(46));
+    c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint32(16, crc, true); c.setUint32(20, data.length, true); c.setUint32(24, data.length, true); c.setUint16(28, nb.length, true); c.setUint32(42, off, true);
+    cen.push(new Uint8Array(c.buffer), nb); off += 30 + nb.length + data.length;
+  }
+  const cs = cen.reduce((n, x) => n + x.length, 0), e = new DataView(new ArrayBuffer(22));
+  e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, cs, true); e.setUint32(16, off, true);
+  return new Blob([...parts, ...cen, new Uint8Array(e.buffer)], { type: 'application/zip' });
+}
+$('zip').onclick = () => {
+  const files = [...done].map(([h, d]) => ['hlas/' + h + '.bin', d]);
+  files.push(['hlas/index.json', new TextEncoder().encode(JSON.stringify([...done.keys()]))]);
+  const a = document.createElement('a'); a.href = URL.createObjectURL(zip(files)); a.download = ZIPNAME; a.click();
+};
+progress();
+</script>
+</body>
+</html>
