@@ -480,11 +480,24 @@
   $('tRate').value = settings.rate; $('tAuto').checked = settings.auto;
   $('tRate').oninput = () => { settings.rate = +$('tRate').value; save(); };
   $('tAuto').onchange = () => { settings.auto = $('tAuto').checked; save(); };
-  function unlockSpeech() { if (!('speechSynthesis' in window)) return; const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); }
+  /* ---------- nahrané hlasy (ak existujú), inak hlas telefónu ---------- */
+  const aud = new Audio(); aud.preload = 'auto';
+  let AUDIO = new Set(); const BAD = new Set();
+  const fnv = (str) => { let x = 0x811c9dc5; for (const b of new TextEncoder().encode(str)) { x ^= b; x = Math.imul(x, 0x01000193) >>> 0; } return x.toString(16).padStart(8, '0'); };
+  try { fetch('audio/index.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : []).then(a => { AUDIO = new Set(a); }).catch(() => {}); } catch {}
+  function halt() { try { speechSynthesis.cancel(); } catch {} try { aud.onended = null; aud.onerror = null; aud.pause(); } catch {} }
+  function playClip(hh, tok, t) {
+    aud.onended = () => { if (speaking && !paused && cur === tok) { silentFails = 0; wi++; next(); } };
+    aud.onerror = () => { if (speaking && !paused && cur === tok) { BAD.add(hh); next(); } };
+    aud.src = 'audio/' + hh + '.mp3'; aud.playbackRate = Math.min(1.2, Math.max(.8, settings.rate || 1));
+    const p = aud.play(); if (p && p.catch) p.catch(() => { if (speaking && !paused && cur === tok) { BAD.add(hh); next(); } });
+    clearTimeout(watchdog); watchdog = setTimeout(() => { if (speaking && !paused && cur === tok) { halt(); wi++; next(); } }, 120000);
+  }
+  function unlockSpeech() { try { aud.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA='; const p = aud.play(); p && p.catch && p.catch(() => {}); } catch {} if (!('speechSynthesis' in window)) return; const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); }
   const split = (t) => t.match(/[^.!?]+[.!?]+["“”]?\s*|[^.!?]+$/g) || [t];
   function speak(list, done) {
     if (!('speechSynthesis' in window)) { done && done(); return; }
-    speechSynthesis.cancel(); segs = list.map(s => ({ ...s, ss: split(s.text) })); si = 0; wi = 0; onDone = done || null; speaking = true; paused = false; silentFails = 0;
+    halt(); segs = list.map(s => ({ ...s, ss: split(s.text) })); si = 0; wi = 0; onDone = done || null; speaking = true; paused = false; silentFails = 0;
     $('tPlayer').hidden = false; $('tPlay').textContent = '⏸ Pauza'; setTimeout(() => { if (speaking && !paused) next(); }, 90);
   }
   function next() {
@@ -493,6 +506,7 @@
     if (si >= segs.length) { speaking = false; hl(null); $('tPlay').textContent = '▶ Prehrať'; const d = onDone; onDone = null; d && d(); return; }
     const sg = segs[si], t = sg.ss[wi].trim(); hl(sg.node ? sg.node.querySelectorAll('.sentence')[wi] : null);
     if (!t) { wi++; return next(); }
+    { const hh = fnv(t); if (AUDIO.has(hh) && !BAD.has(hh)) { const tok = {}; cur = tok; playClip(hh, tok, t); return; } }
     const u = new SpeechSynthesisUtterance(t); if (!useDefault) { u.lang = voice ? voice.lang : 'sk-SK'; if (voice) u.voice = voice; } u.rate = settings.rate; cur = u;
     const t0 = Date.now();
     const failed = () => {
@@ -505,19 +519,19 @@
     u.onerror = (e) => { if (speaking && !paused && cur === u && e.error !== 'interrupted' && e.error !== 'canceled') { if (failed()) return; wi++; next(); } };
     try { speechSynthesis.resume(); } catch {}
     speechSynthesis.speak(u);
-    clearTimeout(watchdog); watchdog = setTimeout(() => { if (speaking && !paused && cur === u) { try { speechSynthesis.cancel(); } catch {} wi++; next(); } }, (t.length * 110) / Math.max(.5, settings.rate) + 6000);
+    clearTimeout(watchdog); watchdog = setTimeout(() => { if (speaking && !paused && cur === u) { halt(); wi++; next(); } }, (t.length * 110) / Math.max(.5, settings.rate) + 6000);
   }
   let watchdog = 0;
-  function stopSpeech() { speaking = false; paused = false; cur = null; try { speechSynthesis.cancel(); } catch {} hl(null); }
+  function stopSpeech() { speaking = false; paused = false; cur = null; halt(); hl(null); }
   function hl(n) { document.querySelectorAll('#tStory .sentence.now').forEach(e => e.classList.remove('now')); if (n) { n.classList.add('now'); n.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } }
   function fill(el, text) { el.innerHTML = ''; split(text).forEach(t => { const s = document.createElement('span'); s.className = 'sentence'; s.textContent = t; el.appendChild(s); }); }
   $('tPlay').onclick = () => {
-    if (speaking && !paused) { paused = true; cur = null; speechSynthesis.cancel(); $('tPlay').textContent = '▶ Prehrať'; return; }
+    if (speaking && !paused) { paused = true; cur = null; halt(); $('tPlay').textContent = '▶ Prehrať'; return; }
     if (paused && segs.length) { paused = false; speaking = true; $('tPlay').textContent = '⏸ Pauza'; next(); return; }
     if (current) playStory(current);
   };
-  $('tPrev').onclick = () => { if (!segs.length) return; if (wi > 0) wi--; else if (si > 0) { si--; wi = Math.max(0, segs[si].ss.length - 1); } paused = false; speaking = true; cur = null; speechSynthesis.cancel(); $('tPlay').textContent = '⏸ Pauza'; next(); };
-  $('tSkip').onclick = () => { if (!segs.length) return; si++; wi = 0; paused = false; speaking = true; cur = null; speechSynthesis.cancel(); $('tPlay').textContent = '⏸ Pauza'; next(); };
+  $('tPrev').onclick = () => { if (!segs.length) return; if (wi > 0) wi--; else if (si > 0) { si--; wi = Math.max(0, segs[si].ss.length - 1); } paused = false; speaking = true; cur = null; halt(); $('tPlay').textContent = '⏸ Pauza'; next(); };
+  $('tSkip').onclick = () => { if (!segs.length) return; si++; wi = 0; paused = false; speaking = true; cur = null; halt(); $('tPlay').textContent = '⏸ Pauza'; next(); };
   $('tTest').onclick = () => { $('tMenu').hidden = true; useDefault = false; silentFails = 0; unlockSpeech(); loadVoices(); speak([{ text: 'Ahoj, som váš sprievodca po Budapešti.' }], () => { if (!current) $('tPlayer').hidden = true; }); };
   $('tMenuBtn').onclick = () => { $('tMenu').hidden = !$('tMenu').hidden; if (!$('tMenu').hidden) loadVoices(); };
   $('tReset').onclick = () => { ['bp-v-ukazka', 'bp-v-visited','bp-v-foto','bp-v-intro','bp-v-awarded','bp-v-revealed','bp-v-finale-started'].forEach(k => { try { localStorage.removeItem(k); } catch {} }); location.reload(); };
