@@ -80,7 +80,7 @@
   .minv { width: 14px; height: 14px; border-radius: 50%; background: #c9a34f; border: 2px solid #fff; }
   .minv.done { background: #7d86a3; }
   .mevw { position: relative; width: 18px; height: 18px; }
-  .marr { position: absolute; left: -19px; top: -19px; width: 56px; height: 56px; pointer-events: none; transition: transform .35s ease; visibility: hidden; }
+  .marr { position: absolute; left: -19px; top: -19px; width: 56px; height: 56px; pointer-events: none; transition: transform .2s linear; visibility: hidden; }
   .marr svg { width: 56px; height: 56px; display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,.45)); }
   .mev { width: 18px; height: 18px; border-radius: 50%; background: #4b8dff; border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(75,141,255,.25); }
   .tover { position: fixed; inset: 0; z-index: 950; background: rgba(5,8,20,.92); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 18px; padding: calc(env(safe-area-inset-top, 0px) + 20px) max(18px, env(safe-area-inset-right)) calc(env(safe-area-inset-bottom, 0px) + 20px) max(18px, env(safe-area-inset-left)); text-align: center; overflow-y: auto; }
@@ -431,11 +431,15 @@
     } catch (e) {}
     return bearing(pos, t);
   }
+  let meAng = null;
   function setMeArrow(t) {
     const el = meM && meM.getElement && meM.getElement(); if (!el) return;
     const a = el.querySelector('.marr'); if (!a) return;
     if (!t || !pos) { a.style.visibility = 'hidden'; return; }
-    a.style.visibility = 'visible'; a.style.transform = `rotate(${aheadBearing(t)}deg)`;
+    a.style.visibility = 'visible';
+    const want = aheadBearing(t) - (heading == null ? 0 : heading);
+    if (meAng == null) meAng = want; else { let d = ((want - meAng) % 360 + 540) % 360 - 180; meAng += d; }
+    a.style.transform = `rotate(${meAng}deg)`;
   }
   function setArrow(t) {
     setMeArrow(t);

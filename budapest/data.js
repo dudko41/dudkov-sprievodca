@@ -15,53 +15,69 @@ window.BUD={
  },
  "okruhy": [
   {
-   "id": "sobota-rano",
+   "id": "rano-trznica",
    "den": "2026-11-21",
-   "nazov": "Dopoludnie: Tržnica a Váci utca",
-   "popis": "Po raňajkách pokojne na Veľkú tržnicu, potom pešo po Váci utca na Vörösmarty tér a k bazilike. Kávu a koláč berte ako zastávku, nie ako prestávku.",
-   "cas": "asi 3 hodiny s ochutnávaním",
-   "dlzka": "asi 2,7 km",
+   "nazov": "Dopoludnie: Z hotela na tržnicu",
+   "popis": "Po raňajkách pokojne od hotela Chain Bridge po Váci utca až na Veľkú tržnicu a k Mostu Slobody.",
+   "cas": "asi 2 hodiny s ochutnávaním",
+   "dlzka": "asi 2,2 km",
    "zastavky": [
     "trznica",
-    "szabadsaghid",
-    "vorosmarty",
-    "bazilika"
+    "szabadsaghid"
    ],
    "drobnosti": [
     "vaci"
    ],
-   "trasa": "-51342,305899 -51273,305814 -51329,305713 -51335,305681 -51431,305493|-51431,305493 -51335,305682 -51325,305672 -51295,305700 -51291,305693 -51281,305696 -51256,305714 -51234,305759 -51226,305752 -51223,305758 -50858,305408 -50814,305380 -50797,305377 -50677,305295 -50592,305253 -50505,305194 -50390,305093 -50389,305064 -50335,305015 -50316,305059 -50308,305052 -50312,305042|-50312,305042 -50308,305052 -50316,305059 -50302,305091 -50265,305084 -50257,305173 -50245,305170 -50241,305185 -50222,305181 -50136,305321 -50100,305313 -50102,305349 -50095,305338 -50078,305335 -50070,305413 -50047,305461 -49960,305465 -49947,305436 -49950,305409",
-   "uvod": "Dobré ráno v Budapešti. Dnes sa nikam nenáhlime. Po raňajkách sa ide na Veľkú tržnicu, odtiaľ popri Moste Slobody a po Váci utca do centra. Dá sa ísť metrom M1 na Deák Ferenc tér a potom M3 na Kálvin tér, tržnica je odtiaľ päť minút pešo. Začíname pri tržnici.",
+   "trasa": "-50052,304891 -50045,304956 -50145,304981 -50156,305017 -50165,305028 -50184,305033 -50177,305046 -50260,305064 -50266,305072 -50265,305084 -50280,305089 -50379,305109 -50390,305093 -50545,305223 -50677,305295 -50797,305377 -50814,305380 -50858,305408 -51223,305758 -51226,305752 -51269,305794 -51278,305805 -51273,305814 -51279,305825 -51342,305899|-51342,305899 -51273,305814 -51329,305713 -51335,305681 -51431,305493",
+   "uvod": "Dobré ráno v Budapešti. Dnes sa nikam nenáhlime. Po raňajkách vyrážate z hotela Mamaison Chain Bridge na Mérleg utca a ideme pešo po Váci utca na juh, až na Veľkú tržnicu. Ak sa vám nechce chodiť, môžete ísť električkou číslo 2 popri Dunaji, zastávka Eötvös tér je štyri minúty od hotela a vystúpite pri Fővám tér.",
    "cestou": {
-    "trznica": "Od tržnice choďte krátko na západ k Mostu Slobody, je to len pár minút pešo popri Dunaji.",
-    "szabadsaghid": "Teraz sa pomaly vydajte na sever po Váci utca. Cestou sa dá zastaviť na kávu, trasa je dlhšia, asi pätnásť minút.",
-    "vorosmarty": "Z námestia choďte krátko na sever k veľkej bazilike, kupola je vidieť už z diaľky."
+    "trznica": "Od tržnice choďte krátko na západ k Mostu Slobody, je to len pár minút pešo popri Dunaji."
    },
-   "zaver": "Dopoludnie máte za sebou. Ak chcete, dajte si pri bazilike obed a trochu si oddýchnite. Popoludní vás čaká Reťazový most a hrad, ideálne tak, aby ste na Rybárskej bašte boli na západ slnka."
+   "zaver": "Dopoludnie máte za sebou. Vráťte sa do centra električkou číslo 2 po nábreží alebo pešo po Váci utca a dajte si v pokoji obed. Popoludní pokračuje druhá trasa pri hoteli."
   },
   {
-   "id": "sobota-buda",
+   "id": "poobede-pest",
    "den": "2026-11-21",
-   "nazov": "Popoludnie: Most, hrad a západ slnka",
-   "popis": "Pešo cez Reťazový most do Budína, lanovkou alebo schodmi na hrad a k Rybárskej bašte na západ slnka.",
-   "cas": "asi 2 hodiny, ale radšej dlhšie",
+   "nazov": "Poobede: Gerbeaud, bazilika a Reťazový most",
+   "popis": "Krátka trasa v okolí hotela: Vörösmarty tér s trhom, bazilika a pešo k Reťazovému mostu.",
+   "cas": "asi 1,5 hodiny, s kávou viac",
+   "dlzka": "asi 1,6 km",
+   "zastavky": [
+    "vorosmarty",
+    "bazilika",
+    "lanchid"
+   ],
+   "drobnosti": [
+    "gresham"
+   ],
+   "trasa": "-50312,305042 -50308,305052 -50316,305059 -50302,305091 -50265,305084 -50257,305173 -50245,305170 -50241,305185 -50222,305181 -50136,305321 -50100,305313 -50102,305349 -50095,305338 -50078,305335 -50070,305413 -50047,305461 -49960,305465 -49947,305436 -49950,305409|-49950,305409 -49956,305345 -49928,305332 -49927,305312 -49983,304751 -49980,304740 -50017,304680 -50008,304672 -50037,304664 -50034,304659 -50043,304640 -50071,304498 -50066,304496 -50068,304485 -50073,304487 -50089,304402",
+   "uvod": "Poobede ste hneď pri hoteli. Začíname na námestí Vörösmarty, päť minút od hotela. Dajte si kávu alebo punč na vianočnom trhu, potom k bazilike a nakoniec k Reťazovému mostu, ktorý máte pred hotelom.",
+   "cestou": {
+    "vorosmarty": "Teraz choďte krátko na sever k veľkej bazilike, kupola je vidieť už z diaľky.",
+    "bazilika": "Od baziliky choďte na juhozápad k Dunaju a k Reťazovému mostu, asi desať minút. Hotel máte po ceste, môžete tam na chvíľu odskočiť."
+   },
+   "zaver": "Teraz prejdite Reťazový most na budínsku stranu. Čaká vás hrad a západ slnka."
+  },
+  {
+   "id": "hrad-zapad",
+   "den": "2026-11-21",
+   "nazov": "Popoludnie: Hrad a západ slnka",
+   "popis": "Cez Reťazový most do Budína, lanovkou alebo schodmi na hrad a k Rybárskej bašte na západ slnka.",
+   "cas": "asi 2 hodiny, radšej dlhšie",
    "dlzka": "asi 1,9 km",
    "zastavky": [
-    "lanchid",
     "sikl",
     "palac",
     "matyas",
     "halasz"
    ],
    "drobnosti": [
-    "gresham",
     "ruszwurm",
     "szentharomsag"
    ],
    "trasa": "-50089,304402 -50121,304239 -50116,304237 -50118,304226 -50123,304228 -50147,304101 -50145,304074 -50132,304049 -50138,304037 -50137,304021 -50163,303998 -50170,303956 -50152,303945 -50127,303905 -50132,303905 -50137,303890 -50185,303899 -50217,303920|-50217,303920 -50231,303932 -50253,303916 -50291,303940 -50307,303959 -50269,303901 -50275,303893 -50362,304003 -50372,303985|-50372,303985 -50362,304003 -50262,303875 -50257,303879 -50264,303863 -50237,303869 -50226,303858 -50225,303867 -50173,303859 -50132,303849 -50096,303827 -50074,303799 -50054,303749 -50051,303736 -50057,303699 -49980,303629 -49918,303590 -49896,303618 -49827,303514 -49833,303489 -49782,303474 -49766,303454 -49780,303408|-49780,303408 -49758,303465 -49768,303473",
-   "uvod": "Popoludnie patrí Budínu. Najprv prejdite Reťazový most, potom hore na hrad lanovkou alebo schodmi a nakoniec na Rybársku baštu, kde je dnes západ slnka okolo štvrtej. Nikam sa nenáhlite. Začíname pri levoch Reťazového mosta.",
+   "uvod": "Teraz patrí Budín vám. Prejdite Reťazový most, vyjdite hore na hrad lanovkou alebo po schodoch a skončite na Rybárskej bašte, kde je dnes západ slnka okolo štvrtej. Začíname pri dolnej stanici lanovky.",
    "cestou": {
-    "lanchid": "Prejdite most na budínsku stranu a choďte k dolnej stanici lanovky. Je to len pár minút.",
     "sikl": "Vyjdite hore na hrad. Cestou sa čo chvíľu obzrite, výhľad na Dunaj je krásny.",
     "palac": "Prejdite popri hradných múroch na sever, k veži Matejovho kostola. Je to asi desať minút.",
     "matyas": "Hneď vedľa kostola je Rybárska bašta, zvonku sa k nej dá prejsť cez nádvorie."
