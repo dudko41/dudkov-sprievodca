@@ -450,11 +450,39 @@
   $('tRate').value = settings.rate; $('tAuto').checked = settings.auto;
   $('tRate').oninput = () => { settings.rate = +$('tRate').value; save(); };
   $('tAuto').onchange = () => { settings.auto = $('tAuto').checked; save(); };
-  function unlockSpeech() { if (!('speechSynthesis' in window)) return; const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); }
+  /* ---------- nahrané hlasy (šifrované), inak hlas telefónu ---------- */
+  const aud = new Audio(); aud.preload = 'auto';
+  let HL = new Set(); const BAD = new Set(), CACHE = new Map();
+  const fnv = (str) => { let x = 0x811c9dc5; for (const b of new TextEncoder().encode(str)) { x ^= b; x = Math.imul(x, 0x01000193) >>> 0; } return x.toString(16).padStart(8, '0'); };
+  try { fetch('hlas/index.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : []).then(a => { HL = new Set(a); }).catch(() => {}); } catch {}
+  function halt() { try { speechSynthesis.cancel(); } catch {} try { aud.onended = null; aud.onerror = null; aud.pause(); } catch {} }
+  function clipUrl(hh) {
+    if (!CACHE.has(hh)) CACHE.set(hh, (async () => {
+      const k = await window.HLAS_KEY; if (!k) throw new Error('kluc');
+      const b = new Uint8Array(await (await fetch('hlas/' + hh + '.bin')).arrayBuffer());
+      const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b.slice(0, 12) }, k, b.slice(12));
+      return URL.createObjectURL(new Blob([pt], { type: 'audio/mpeg' }));
+    })());
+    const p = CACHE.get(hh); p.catch(() => CACHE.delete(hh)); return p;
+  }
+  const hasClip = (t) => { const hh = fnv(t); return HL.has(hh) && !BAD.has(hh) && window.HLAS_KEY ? hh : null; };
+  function playClip(hh, tok) {
+    const fail = () => { if (speaking && !paused && cur === tok) { BAD.add(hh); next(); } };
+    try { const sg = segs[si]; const nt = sg && sg.ss[wi + 1] ? sg.ss[wi + 1].trim() : (segs[si + 1] ? segs[si + 1].ss[0].trim() : ''); const nh = nt && hasClip(nt); if (nh) clipUrl(nh).catch(() => {}); } catch {}
+    clipUrl(hh).then(url => {
+      if (!(speaking && !paused && cur === tok)) return;
+      aud.onended = () => { if (speaking && !paused && cur === tok) { wi++; next(); } };
+      aud.onerror = fail;
+      aud.src = url; aud.playbackRate = Math.min(1.2, Math.max(.8, settings.rate || 1));
+      const p = aud.play(); if (p && p.catch) p.catch(fail);
+    }, fail);
+    clearTimeout(watchdog); watchdog = setTimeout(() => { if (speaking && !paused && cur === tok) { halt(); wi++; next(); } }, 120000);
+  }
+  function unlockSpeech() { try { aud.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA='; const p = aud.play(); p && p.catch && p.catch(() => {}); } catch {} if (!('speechSynthesis' in window)) return; const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); }
   const split = (t) => t.match(/[^.!?]+[.!?]+["“”]?\s*|[^.!?]+$/g) || [t];
   function speak(list, done) {
     if (!('speechSynthesis' in window)) { done && done(); return; }
-    speechSynthesis.cancel(); segs = list.map(s => ({ ...s, ss: split(s.text) })); si = 0; wi = 0; onDone = done || null; speaking = true; paused = false;
+    halt(); segs = list.map(s => ({ ...s, ss: split(s.text) })); si = 0; wi = 0; onDone = done || null; speaking = true; paused = false;
     $('tPlayer').hidden = false; $('tPlay').textContent = '⏸ Pauza'; next();
   }
   function next() {
@@ -463,23 +491,24 @@
     if (si >= segs.length) { speaking = false; hl(null); $('tPlay').textContent = '▶ Přehrát'; const d = onDone; onDone = null; d && d(); return; }
     const sg = segs[si], t = sg.ss[wi].trim(); hl(sg.node ? sg.node.querySelectorAll('.sentence')[wi] : null);
     if (!t) { wi++; return next(); }
+    { const hh = hasClip(t); if (hh) { const tok = {}; cur = tok; playClip(hh, tok); return; } }
     const u = new SpeechSynthesisUtterance(t); u.lang = voice ? voice.lang : 'cs-CZ'; if (voice) u.voice = voice; u.rate = settings.rate; cur = u;
     u.onend = () => { if (speaking && !paused && cur === u) { wi++; next(); } };
     u.onerror = (e) => { if (speaking && !paused && cur === u && e.error !== 'interrupted' && e.error !== 'canceled') { wi++; next(); } };
     speechSynthesis.speak(u);
-    clearTimeout(watchdog); watchdog = setTimeout(() => { if (speaking && !paused && cur === u) { try { speechSynthesis.cancel(); } catch {} wi++; next(); } }, (t.length * 110) / Math.max(.5, settings.rate) + 6000);
+    clearTimeout(watchdog); watchdog = setTimeout(() => { if (speaking && !paused && cur === u) { halt(); wi++; next(); } }, (t.length * 110) / Math.max(.5, settings.rate) + 6000);
   }
   let watchdog = 0;
-  function stopSpeech() { speaking = false; paused = false; cur = null; try { speechSynthesis.cancel(); } catch {} hl(null); }
+  function stopSpeech() { speaking = false; paused = false; cur = null; halt(); hl(null); }
   function hl(n) { document.querySelectorAll('#tStory .sentence.now').forEach(e => e.classList.remove('now')); if (n) { n.classList.add('now'); n.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } }
   function fill(el, text) { el.innerHTML = ''; split(text).forEach(t => { const s = document.createElement('span'); s.className = 'sentence'; s.textContent = t; el.appendChild(s); }); }
   $('tPlay').onclick = () => {
-    if (speaking && !paused) { paused = true; cur = null; speechSynthesis.cancel(); $('tPlay').textContent = '▶ Přehrát'; return; }
+    if (speaking && !paused) { paused = true; cur = null; halt(); $('tPlay').textContent = '▶ Přehrát'; return; }
     if (paused && segs.length) { paused = false; speaking = true; $('tPlay').textContent = '⏸ Pauza'; next(); return; }
     if (current) playStory(current);
   };
-  $('tPrev').onclick = () => { if (!segs.length) return; if (wi > 0) wi--; else if (si > 0) { si--; wi = Math.max(0, segs[si].ss.length - 1); } paused = false; speaking = true; cur = null; speechSynthesis.cancel(); $('tPlay').textContent = '⏸ Pauza'; next(); };
-  $('tSkip').onclick = () => { if (!segs.length) return; si++; wi = 0; paused = false; speaking = true; cur = null; speechSynthesis.cancel(); $('tPlay').textContent = '⏸ Pauza'; next(); };
+  $('tPrev').onclick = () => { if (!segs.length) return; if (wi > 0) wi--; else if (si > 0) { si--; wi = Math.max(0, segs[si].ss.length - 1); } paused = false; speaking = true; cur = null; halt(); $('tPlay').textContent = '⏸ Pauza'; next(); };
+  $('tSkip').onclick = () => { if (!segs.length) return; si++; wi = 0; paused = false; speaking = true; cur = null; halt(); $('tPlay').textContent = '⏸ Pauza'; next(); };
   $('tTest').onclick = () => { $('tMenu').hidden = true; unlockSpeech(); loadVoices(); speak([{ text: 'Ahoj Peťko, jsem tvůj průvodce po Vídni.' }], () => { if (!current) $('tPlayer').hidden = true; }); };
   $('tMenuBtn').onclick = () => { $('tMenu').hidden = !$('tMenu').hidden; if (!$('tMenu').hidden) loadVoices(); };
   $('tReset').onclick = () => { ['pp-v-ukazka', 'pp-v-visited','pp-v-foto','pp-v-intro','pp-v-awarded','pp-v-revealed','pp-v-finale-started'].forEach(k => { try { localStorage.removeItem(k); } catch {} }); location.reload(); };
