@@ -80,7 +80,7 @@
   .minv { width: 14px; height: 14px; border-radius: 50%; background: #c9a34f; border: 2px solid #fff; }
   .minv.done { background: #7d86a3; }
   .mevw { position: relative; width: 18px; height: 18px; }
-  .marr { position: absolute; left: -19px; top: -19px; width: 56px; height: 56px; pointer-events: none; transition: transform .2s linear; visibility: hidden; }
+  .marr { position: absolute; left: -19px; top: -19px; width: 56px; height: 56px; pointer-events: none; transition: transform .25s ease-out; visibility: hidden; }
   .marr svg { width: 56px; height: 56px; display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,.45)); }
   .mev { width: 18px; height: 18px; border-radius: 50%; background: #4b8dff; border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(75,141,255,.25); }
   .tover { position: fixed; inset: 0; z-index: 950; background: rgba(5,8,20,.92); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 18px; padding: calc(env(safe-area-inset-top, 0px) + 20px) max(18px, env(safe-area-inset-right)) calc(env(safe-area-inset-bottom, 0px) + 20px) max(18px, env(safe-area-inset-left)); text-align: center; overflow-y: auto; }
@@ -421,24 +421,30 @@
     $('tNum').textContent = stops.indexOf(n) + 1; $('tNextL').textContent = 'Ďalšia zastávka'; $('tNextN').textContent = n.nazov; setArrow(n);
     renderWalkProg();
   }
+  let aIdx = 0, aRoute = null;
   function aheadBearing(t) {
     try {
       if (route && route.trasa && route.id !== 'finale') {
-        const g = geo(route); let bi = -1, bd = Infinity;
-        for (let i = 0; i < g.pts.length; i++) { const d = dist(pos, P(g.pts[i])); if (d < bd) { bd = d; bi = i; } }
-        if (bi >= 0 && bd < 60) { let j = bi; while (j + 1 < g.pts.length && g.cum[j] - g.cum[bi] < 35) j++; if (j > bi) return bearing(pos, P(g.pts[j])); }
+        const g = geo(route);
+        if (aRoute !== route.id) { aRoute = route.id; aIdx = 0; }
+        let bi = -1, bd = Infinity; const lo = Math.max(0, aIdx - 6), hi = Math.min(g.pts.length, aIdx + 40);
+        for (let i = lo; i < hi; i++) { const d = dist(pos, P(g.pts[i])); if (d < bd) { bd = d; bi = i; } }
+        if (bi < 0 || bd > 70) { bi = -1; bd = Infinity; for (let i = 0; i < g.pts.length; i++) { const d = dist(pos, P(g.pts[i])); if (d < bd) { bd = d; bi = i; } } }
+        if (bi >= 0 && bd < 70) { aIdx = bi; let j = bi; while (j + 1 < g.pts.length && dist(pos, P(g.pts[j])) < 45) j++; if (j > bi && dist(pos, P(g.pts[j])) > 15) return bearing(pos, P(g.pts[j])); }
       }
     } catch (e) {}
     return bearing(pos, t);
   }
-  let meAng = null;
+  let meAng = null, meT = 0;
   function setMeArrow(t) {
     const el = meM && meM.getElement && meM.getElement(); if (!el) return;
     const a = el.querySelector('.marr'); if (!a) return;
     if (!t || !pos) { a.style.visibility = 'hidden'; return; }
     a.style.visibility = 'visible';
+    const nowT = Date.now(); if (meAng != null && nowT - meT < 120) return;
     const want = aheadBearing(t) - (heading == null ? 0 : heading);
-    if (meAng == null) meAng = want; else { let d = ((want - meAng) % 360 + 540) % 360 - 180; meAng += d; }
+    if (meAng == null) meAng = want; else { let d = ((want - meAng) % 360 + 540) % 360 - 180; if (Math.abs(d) < 4) return; meAng += d; }
+    meT = nowT;
     a.style.transform = `rotate(${meAng}deg)`;
   }
   function setArrow(t) {
@@ -448,7 +454,7 @@
     const b = bearing(pos, t); $('tArrow').style.transform = `rotate(${heading == null ? b : b - heading}deg)`;
   }
   function startCompass() {
-    const h = (e) => { let x = null; if (typeof e.webkitCompassHeading === 'number') x = e.webkitCompassHeading; else if (e.absolute && e.alpha != null) x = 360 - e.alpha; if (x != null) { heading = x; const n = route && (route.id === 'finale' ? byId('finale-miesto') : nextStop()); if (n && pos) setArrow(n); } };
+    const h = (e) => { let x = null; if (typeof e.webkitCompassHeading === 'number') x = e.webkitCompassHeading; else if (e.absolute && e.alpha != null) x = 360 - e.alpha; if (x != null) { if (heading == null) heading = x; else { const d = ((x - heading) % 360 + 540) % 360 - 180; heading = (heading + d * 0.18 + 360) % 360; } const n = route && (route.id === 'finale' ? byId('finale-miesto') : nextStop()); if (n && pos) setArrow(n); } };
     try {
       if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') DeviceOrientationEvent.requestPermission().then(s => { if (s === 'granted') addEventListener('deviceorientation', h, true); }).catch(() => {});
       else addEventListener('deviceorientationabsolute' in window ? 'deviceorientationabsolute' : 'deviceorientation', h, true);
@@ -458,7 +464,7 @@
   $('tFollow').onclick = () => setFollow(!following);
 
   /* ---------- speech (Czech) ---------- */
-  let voices = [], voice = null, segs = [], si = 0, wi = 0, speaking = false, paused = false, onDone = null, cur = null;
+  let silentFails = 0, useDefault = false, voices = [], voice = null, segs = [], si = 0, wi = 0, speaking = false, paused = false, onDone = null, cur = null;
   const score = (v) => { let s = 0; if (/^sk/i.test(v.lang)) s += 100; else if (/^cs/i.test(v.lang)) s += 40; else return -1; if (/premium|prémiov|enhanced|vylepšen|neural|natural|google|laura|lucia/i.test(v.name)) s += 20; if (/premium|prémiov|enhanced|vylepšen/i.test(v.name)) s += 10; return s; };
   function loadVoices() {
     if (!('speechSynthesis' in window)) return;
@@ -478,8 +484,8 @@
   const split = (t) => t.match(/[^.!?]+[.!?]+["“”]?\s*|[^.!?]+$/g) || [t];
   function speak(list, done) {
     if (!('speechSynthesis' in window)) { done && done(); return; }
-    speechSynthesis.cancel(); segs = list.map(s => ({ ...s, ss: split(s.text) })); si = 0; wi = 0; onDone = done || null; speaking = true; paused = false;
-    $('tPlayer').hidden = false; $('tPlay').textContent = '⏸ Pauza'; next();
+    speechSynthesis.cancel(); segs = list.map(s => ({ ...s, ss: split(s.text) })); si = 0; wi = 0; onDone = done || null; speaking = true; paused = false; silentFails = 0;
+    $('tPlayer').hidden = false; $('tPlay').textContent = '⏸ Pauza'; setTimeout(() => { if (speaking && !paused) next(); }, 90);
   }
   function next() {
     if (!speaking) return;
@@ -487,9 +493,17 @@
     if (si >= segs.length) { speaking = false; hl(null); $('tPlay').textContent = '▶ Prehrať'; const d = onDone; onDone = null; d && d(); return; }
     const sg = segs[si], t = sg.ss[wi].trim(); hl(sg.node ? sg.node.querySelectorAll('.sentence')[wi] : null);
     if (!t) { wi++; return next(); }
-    const u = new SpeechSynthesisUtterance(t); u.lang = voice ? voice.lang : 'sk-SK'; if (voice) u.voice = voice; u.rate = settings.rate; cur = u;
-    u.onend = () => { if (speaking && !paused && cur === u) { wi++; next(); } };
-    u.onerror = (e) => { if (speaking && !paused && cur === u && e.error !== 'interrupted' && e.error !== 'canceled') { wi++; next(); } };
+    const u = new SpeechSynthesisUtterance(t); if (!useDefault) { u.lang = voice ? voice.lang : 'sk-SK'; if (voice) u.voice = voice; } u.rate = settings.rate; cur = u;
+    const t0 = Date.now();
+    const failed = () => {
+      silentFails++;
+      if (silentFails === 2 && !useDefault) { useDefault = true; silentFails = 0; setTimeout(() => { if (speaking && !paused) next(); }, 150); return true; }
+      if (silentFails >= 2) { speaking = false; cur = null; hl(null); $('tPlay').textContent = '▶ Prehrať'; gps('warn', 'Hlas sa nespustil. Skontroluj hlasitosť a tichý režim a skús v ponuke „Vyskúšať hlas“.'); return true; }
+      return false;
+    };
+    u.onend = () => { if (speaking && !paused && cur === u) { if (t.length > 25 && Date.now() - t0 < 350) { if (failed()) return; } else silentFails = 0; wi++; next(); } };
+    u.onerror = (e) => { if (speaking && !paused && cur === u && e.error !== 'interrupted' && e.error !== 'canceled') { if (failed()) return; wi++; next(); } };
+    try { speechSynthesis.resume(); } catch {}
     speechSynthesis.speak(u);
     clearTimeout(watchdog); watchdog = setTimeout(() => { if (speaking && !paused && cur === u) { try { speechSynthesis.cancel(); } catch {} wi++; next(); } }, (t.length * 110) / Math.max(.5, settings.rate) + 6000);
   }
@@ -504,7 +518,7 @@
   };
   $('tPrev').onclick = () => { if (!segs.length) return; if (wi > 0) wi--; else if (si > 0) { si--; wi = Math.max(0, segs[si].ss.length - 1); } paused = false; speaking = true; cur = null; speechSynthesis.cancel(); $('tPlay').textContent = '⏸ Pauza'; next(); };
   $('tSkip').onclick = () => { if (!segs.length) return; si++; wi = 0; paused = false; speaking = true; cur = null; speechSynthesis.cancel(); $('tPlay').textContent = '⏸ Pauza'; next(); };
-  $('tTest').onclick = () => { $('tMenu').hidden = true; unlockSpeech(); loadVoices(); speak([{ text: 'Ahoj, som váš sprievodca po Budapešti.' }], () => { if (!current) $('tPlayer').hidden = true; }); };
+  $('tTest').onclick = () => { $('tMenu').hidden = true; useDefault = false; silentFails = 0; unlockSpeech(); loadVoices(); speak([{ text: 'Ahoj, som váš sprievodca po Budapešti.' }], () => { if (!current) $('tPlayer').hidden = true; }); };
   $('tMenuBtn').onclick = () => { $('tMenu').hidden = !$('tMenu').hidden; if (!$('tMenu').hidden) loadVoices(); };
   $('tReset').onclick = () => { ['bp-v-ukazka', 'bp-v-visited','bp-v-foto','bp-v-intro','bp-v-awarded','bp-v-revealed','bp-v-finale-started'].forEach(k => { try { localStorage.removeItem(k); } catch {} }); location.reload(); };
   $('tSim').onclick = () => { simulate = !simulate; $('tSimS').textContent = simulate ? 'zap.' : 'vyp.'; $('tMenu').hidden = true; if (simulate) { stopGps(); gps('warn', 'Skúšobný režim: ťukni na mapu'); } else if (route && $('tStart').hidden) startGps(); };

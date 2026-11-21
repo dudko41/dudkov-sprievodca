@@ -112,7 +112,7 @@ window.BUD={
    "viac": "Halu navrhol architekt Samu Pecz a stojí hneď pri Dunaji, kam sa tovar vozil loďou. Hore sú stánky s lángosom, kde sa dá najesť lacno a dosýta. Prízemie je pre tých, ktorí chcú kúpiť paprikový mix alebo údené klobásy.",
    "tip": "Dobrý suvenír je maďarská paprika, salámy a likér Unicum, ale tie sú lacnejšie dole.",
    "info": "Podľa údajov má tržnica otvorené v sobotu do 16:00 a v nedeľu približne od 10:00 do 16:00, ale zdroje si protirečia, preto si to overte.",
-   "foto": "Fotka pred stánkom s paprikou.",
+   "foto": "Selfie vo dvojici pred stánkom s paprikou, každý drží jednu papriku.",
    "druh": "klasika",
    "kratce": "Tržnica z roku 1897",
    "gula": {
@@ -136,7 +136,7 @@ window.BUD={
    "viac": "Počas druhej svetovej vojny ho Nemci vyhodili do vzduchu, a tak ho po vojne museli postaviť takmer znova. Po oboch stranách mosta sa dá zísť k Dunaju.",
    "tip": "Na most sa dá vyjsť po schodoch aj z nábrežia.",
    "info": "Most je prístupný pešo celý deň.",
-   "foto": "Fotka na moste s Gellértovým vrchom v pozadí.",
+   "foto": "Spoločná fotka na moste, v pozadí Gellértov vrch.",
    "druh": "vyhlad",
    "kratce": "Zelený most s vtákom Turul",
    "gula": {
@@ -169,7 +169,7 @@ window.BUD={
    "viac": "Cukrárnik Henrik Kugler tu začal predávať dezerty v polovici 19. storočia. V roku 1884 ho prevzal Švajčiar Emil Gerbeaud, ktorý do Pešti priniesol francúzsku a viedenskú cukrársku školu. Dnes je typickým dezertom Gerbeaud rez s marhuľovým lekvárom, vlašskými orechmi a čokoládou. Kaviareň mala kedysi pre dámy zvláštnu izbu, kde sa dalo nerušene sladiť. Časť zákuskov pripomína, že Pešť bola v tej dobe konkurentom Viedne.",
    "tip": "Rez Gerbeaud si dajte v kaviarni, ale marcipánové figúrky a balené dobroty sú na ceste domov lacnejšie v obchode vedľa.",
    "info": "Trh na Vörösmarty tér beží od 13. novembra. Podľa dostupných údajov býva v sobotu približne od 11:00 do 22:00 a v nedeľu do 21:00. Gerbeaud má otvorené denne od rána do večera.",
-   "foto": "Zákusok z Gerbeaud a punč. Prvá sladká zastávka v Pešti.",
+   "foto": "Selfie vo dvojici s pohárom punču alebo zákuskom z Gerbeaud, hlavy pri sebe.",
    "druh": "klasika",
    "kratce": "Gerbeaud, trh a punč",
    "gula": {
@@ -193,7 +193,7 @@ window.BUD={
    "viac": "Kostol nesie meno prvého uhorského kráľa Štefana I. Vo vnútri sa v kaplnke uchováva jeho mumifikovaná pravá ruka, Svätá pravica, ktorú Maďari uctievajú ako najcennejšiu relikviu. Na kupolu vedie výťah a potom schody a hore je jeden z najkrajších panoramatických výhľadov na mesto. Večer sa na priečelie premieta svetelná šou.",
    "tip": "Na kupolu choďte, keď ešte svieti slnko, a večer sa potom vráťte na svetelnú šou a trh.",
    "info": "Adventný trh pri bazilike beží od 13. novembra, v sobotu približne od 11:00 do 23:00. Časy svetelnej šou na tohtoročný advent nie sú overené, spýtajte sa na mieste.",
-   "foto": "Vy dvaja pred svetielkujúcou bazilikou.",
+   "foto": "Spoločná fotka pred bazilikou. Poproste okoloidúceho, nech vás odfotí aj s kupolou.",
    "druh": "klasika",
    "kratce": "Kupola vysoká ako Parlament",
    "gula": {
@@ -217,7 +217,7 @@ window.BUD={
    "viac": "Most dal postaviť gróf István Széchenyi. Údajne po tom, čo musel čakať týždeň na brehu Dunaja, aby sa dostal na pohreb otca, lebo cez zamrznutú rieku nešla loď. V roku 1945 most vyhodili do vzduchu ustupujúci Nemci. Znovu otvorili ho v roku 1949, presne sto rokov po pôvodnom otvorení. Po zotmení je osvetlený tisíckami žiaroviek.",
    "tip": "Prejdite most pešo na budínsku stranu. Trvá to len pár minút a výhľad je najlepší, keď sa otočíte späť na Pešť.",
    "info": "Most je prístupný pešo celý deň, električky tu nechodia.",
-   "foto": "Dvaja na moste, v pozadí levy.",
+   "foto": "Spoločná fotka na moste, v pozadí levy. Poproste okoloidúceho, nech vás odfotí.",
    "druh": "klasika",
    "kratce": "Prvý most medzi Budínom a Peštou",
    "gula": {
@@ -259,7 +259,7 @@ window.BUD={
    "viac": "Z veľkého paláca zostali po vojne len múry. Archeológovia pritom pri obnove odkryli zvyšky stredovekého paláca, ktoré sú dnes súčasťou múzea. Leví dvor, kde stoja dva páry kamenných levov, je vstupnou bránou. V okolí sú dobré miesta na prechádzku bez vstupného, hradné záhrady a ochodze.",
    "tip": "Obdivovať terasy a nádvoria sa dá zadarmo. Vstupné platíte len do múzeí.",
    "info": "Hradný vrch je prístupný celý deň, múzeá majú vlastné otváracie hodiny.",
-   "foto": "Pohľad na Dunaj z terasy hradu.",
+   "foto": "Selfie vo dvojici na terase, za vami Dunaj a Parlament.",
    "druh": "vyhlad",
    "kratce": "Hradná terasa s výhľadom na Pešť",
    "gula": {
@@ -283,7 +283,7 @@ window.BUD={
    "viac": "Za osmanskej nadvlády v rokoch 1541 až 1686 slúžil kostol ako mešita. Dnešnú novogotickú podobu mu v rokoch 1873 až 1896 dal architekt Frigyes Schulek. Vo vnútri sú nástenné maľby a pestrofarebné vitráže. Do kostola sa vstupuje s lístkom.",
    "tip": "Podľa údajov býva kostol otvorený pre turistov v sobotu približne do 13:00 a v nedeľu až od 13:00, pričom počas bohoslužieb je zatvorený. Skontrolujte to na mieste. Vstupné je okolo 3 400 Ft.",
    "info": "Pri bohoslužbách a koncertoch nie je kostol pre turistov otvorený.",
-   "foto": "Farebná strecha Matejovho kostola.",
+   "foto": "Spoločná fotka pred Matejovým kostolom, obaja s hlavou naklonenou k farebnej streche.",
    "druh": "klasika",
    "kratce": "Pestrá strecha zo Zsolnay",
    "gula": {
@@ -307,7 +307,7 @@ window.BUD={
    "viac": "Autorom je Frigyes Schulek, ten istý architekt, ktorý prestaval aj susedný Matejov kostol. Dolné terasy a schody sú zadarmo a prístupné nepretržite. Za vstup na horné veže sa platí asi 1 700 Ft v čase približne od 9:00 do 19:00, mimo tohto času sú aj horné veže voľne prístupné. Pri západe slnka je tu najlepšie svetlo na celom meste.",
    "tip": "Vstup na horné terasy sa platí len cez deň, večer je pohľad z dolných terás rovnako krásny a zadarmo.",
    "info": "Pokladnica prijíma len platobné karty.",
-   "foto": "Spoločná fotka s Parlamentom v pozadí.",
+   "foto": "Spoločná fotka pri západe slnka, za vami Parlament a Dunaj. Poproste okoloidúceho o fotku celej bašty.",
    "druh": "vyhlad",
    "kratce": "Sedem veží a výhľad na Parlament",
    "gula": {
