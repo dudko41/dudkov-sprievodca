@@ -79,6 +79,9 @@
   .pinv.fin { background: var(--rose); width: 38px; height: 38px; font-size: 18px; }
   .minv { width: 14px; height: 14px; border-radius: 50%; background: #c9a34f; border: 2px solid #fff; }
   .minv.done { background: #7d86a3; }
+  .mevw { position: relative; width: 18px; height: 18px; }
+  .marr { position: absolute; left: -19px; top: -19px; width: 56px; height: 56px; pointer-events: none; transition: transform .35s ease; visibility: hidden; }
+  .marr svg { width: 56px; height: 56px; display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,.45)); }
   .mev { width: 18px; height: 18px; border-radius: 50%; background: #4b8dff; border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(75,141,255,.25); }
   .tover { position: fixed; inset: 0; z-index: 950; background: rgba(5,8,20,.92); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 18px; padding: calc(env(safe-area-inset-top, 0px) + 20px) max(18px, env(safe-area-inset-right)) calc(env(safe-area-inset-bottom, 0px) + 20px) max(18px, env(safe-area-inset-left)); text-align: center; overflow-y: auto; }
   .tover > :first-child { margin-top: auto; }
@@ -374,7 +377,7 @@
     if (!simulate) gps(pos.acc <= 35 ? 'live' : 'warn', pos.acc <= 35 ? `Poloha presná na ±${Math.round(pos.acc)} m` : `Slabý signál GPS (±${Math.round(pos.acc)} m)`);
     const ll = [pos.lat, pos.lon];
     if (showing) return;
-    if (!meM) { meM = L.marker(ll, { icon: L.divIcon({ className: '', html: '<div class="mev"></div>', iconSize: [18, 18], iconAnchor: [9, 9] }), interactive: false, zIndexOffset: 1000 }).addTo(map); meC = L.circle(ll, { radius: pos.acc, color: '#4b8dff', weight: 1, fillOpacity: .08, interactive: false }).addTo(map); }
+    if (!meM) { meM = L.marker(ll, { icon: L.divIcon({ className: '', html: '<div class="mevw"><i class="marr"><svg viewBox="0 0 56 56"><path d="M28 1 L38 17 L28 12 L18 17 Z" fill="#4b8dff" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/></svg></i><div class="mev"></div></div>', iconSize: [18, 18], iconAnchor: [9, 9] }), interactive: false, zIndexOffset: 1000 }).addTo(map); meC = L.circle(ll, { radius: pos.acc, color: '#4b8dff', weight: 1, fillOpacity: .08, interactive: false }).addTo(map); }
     else { meM.setLatLng(ll); meC.setLatLng(ll).setRadius(pos.acc); }
     if (following) map.panTo(ll);
     if (route && route.id === 'finale') checkFinale(); else check(!!instant);
@@ -414,11 +417,28 @@
     $('tProg').textContent = route.id === 'finale' ? `🎄 ${gotGule().length} z ${gulaStops().length}` : `${done}/${t}`;
     const n = nextStop();
     if (route.id === 'finale') { const f = byId('finale-miesto'); $('tNum').textContent = '♥'; $('tNextL').textContent = 'Cieľ'; $('tNextN').textContent = 'Nábrežie s výhľadom na Parlament'; setArrow(f); return; }
-    if (!n) { renderWalkProg(); $('tNum').textContent = '✓'; $('tNextL').textContent = 'Hotovo'; $('tNextN').textContent = 'Táto časť je za vami.'; $('tDist').textContent = ''; $('tArrow').style.visibility = 'hidden'; return; }
+    if (!n) { renderWalkProg(); $('tNum').textContent = '✓'; $('tNextL').textContent = 'Hotovo'; $('tNextN').textContent = 'Táto časť je za vami.'; $('tDist').textContent = ''; setMeArrow(null); $('tArrow').style.visibility = 'hidden'; return; }
     $('tNum').textContent = stops.indexOf(n) + 1; $('tNextL').textContent = 'Ďalšia zastávka'; $('tNextN').textContent = n.nazov; setArrow(n);
     renderWalkProg();
   }
+  function aheadBearing(t) {
+    try {
+      if (route && route.trasa && route.id !== 'finale') {
+        const g = geo(route); let bi = -1, bd = Infinity;
+        for (let i = 0; i < g.pts.length; i++) { const d = dist(pos, P(g.pts[i])); if (d < bd) { bd = d; bi = i; } }
+        if (bi >= 0 && bd < 60) { let j = bi; while (j + 1 < g.pts.length && g.cum[j] - g.cum[bi] < 35) j++; if (j > bi) return bearing(pos, P(g.pts[j])); }
+      }
+    } catch (e) {}
+    return bearing(pos, t);
+  }
+  function setMeArrow(t) {
+    const el = meM && meM.getElement && meM.getElement(); if (!el) return;
+    const a = el.querySelector('.marr'); if (!a) return;
+    if (!t || !pos) { a.style.visibility = 'hidden'; return; }
+    a.style.visibility = 'visible'; a.style.transform = `rotate(${aheadBearing(t)}deg)`;
+  }
   function setArrow(t) {
+    setMeArrow(t);
     if (!pos) { $('tDist').textContent = '–'; $('tArrow').style.visibility = 'hidden'; return; }
     $('tDist').textContent = fmtDist(dist(pos, t)); $('tArrow').style.visibility = 'visible';
     const b = bearing(pos, t); $('tArrow').style.transform = `rotate(${heading == null ? b : b - heading}deg)`;
@@ -943,7 +963,7 @@
       const items = plan.days.flatMap(d => d.items);
       const ll = items.map(x => [x.s.lat, x.s.lon]);
       map.fitBounds(L.latLngBounds(ll).pad(.15), { animate: false });
-      card({ big: true, k: 'Náš výlet do Budapešti', b: 'Budapešť, 21.–22. novembra', s: `${plan.count} ${plural(plan.count, 'zastávka', 'zastávky', 'zastávok')} · ${plan.photos} ${plural(plan.photos, 'fotka', 'fotky', 'fotiek')}` });
+      card({ big: true, k: 'Náš výlet do Budapešti', b: 'Budapešť, 21. novembra', s: `${plan.count} ${plural(plan.count, 'zastávka', 'zastávky', 'zastávok')} · ${plan.photos} ${plural(plan.photos, 'fotka', 'fotky', 'fotiek')}` });
       await sleep(3000, tok); card(null);
       let n = 0, km = 0;
       const dots = () => items.map((_, j) => j < n);
