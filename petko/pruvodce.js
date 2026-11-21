@@ -123,6 +123,63 @@
   .award .btn { animation: ppRise .6s ease 1.9s both; }
   @media (prefers-reduced-motion: reduce) { .tree .b.new, .tree .b.new circle.ball, .tree .lights circle, .tree .star, .award .sp, .award .envl, .award .btn { animation: none; } .award .sp { display: none; } }
   @media (prefers-reduced-motion: reduce) { .slots span.on { animation: none; } }
+  /* ---------- night show: route preview + weekend recap ---------- */
+  #tmap .leaflet-tile-pane { transition: filter 1.2s ease; }
+  #tmap.night .leaflet-tile-pane { filter: invert(1) hue-rotate(195deg) brightness(.78) contrast(.92) saturate(.45); }
+  #tmap.night { background: #0b1124; }
+  #tour.showing .tsheet, #tour.showing .tfab, #tour.showing .tbar { display: none; }
+  .tshow { position: absolute; inset: 0; z-index: 650; pointer-events: none; overflow: hidden; }
+  .tshow > * { pointer-events: auto; }
+  .tshow .sn { position: absolute; top: 0; color: #fff; opacity: .7; pointer-events: none; animation: ppFall linear infinite; }
+  .tshow .shead { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 12px); left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); display: flex; justify-content: flex-end; gap: 8px; }
+  .tshow .shead button { pointer-events: auto; }
+  .scard { position: absolute; left: 0; right: 0; margin: 0 auto; top: calc(env(safe-area-inset-top, 0px) + 64px); width: min(360px, calc(100vw - 28px)); display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 14px; background: rgba(12,17,36,.82); border: 1px solid rgba(243,220,165,.25); box-shadow: 0 10px 30px rgba(0,0,0,.5); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); animation: ppRise .45s ease both; pointer-events: none; }
+  .scard .sno { width: 38px; height: 38px; border-radius: 50%; flex: none; display: grid; place-items: center; font: 700 17px var(--display); color: #fff; background: radial-gradient(circle at 35% 30%, #e0606b, #8f1f2c); box-shadow: 0 0 16px rgba(224,96,107,.6); }
+  .scard .stx { min-width: 0; }
+  .scard .stx b { display: block; font: 500 20px/1.2 var(--display); color: var(--snow); }
+  .scard .stx span { display: block; font-size: 14px; color: var(--gold-soft); opacity: .85; }
+  .scard.big { flex-direction: column; text-align: center; gap: 4px; padding: 18px 16px; }
+  .scard.big .k { font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+  .scard.big b { font: italic 500 28px/1.15 var(--display); color: var(--gold-soft); }
+  .scard.big span { font-size: 15px; color: var(--muted); }
+  .sbar { position: absolute; left: max(14px, env(safe-area-inset-left)); right: max(14px, env(safe-area-inset-right)); bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; font: 700 12px var(--body); letter-spacing: .14em; text-transform: uppercase; color: var(--gold-soft); text-shadow: 0 1px 4px #000; pointer-events: none; }
+  .strack { position: relative; height: 12px; }
+  .strack::before { content: ""; position: absolute; left: 0; right: 0; top: 5px; height: 2px; background: rgba(243,220,165,.25); border-radius: 2px; }
+  .strack .fill { position: absolute; left: 0; top: 5px; height: 2px; background: var(--gold); border-radius: 2px; box-shadow: 0 0 8px var(--gold); transition: width .5s ease; }
+  .strack i { position: absolute; top: 2px; width: 8px; height: 8px; margin-left: -4px; border-radius: 50%; background: #3a4366; border: 1px solid rgba(243,220,165,.5); transition: background .4s; }
+  .strack i.on { background: var(--gold); box-shadow: 0 0 6px var(--gold); }
+  .sday { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; background: radial-gradient(70% 50% at 50% 50%, rgba(11,17,36,.85), rgba(11,17,36,.35)); animation: ppFade 2.2s ease both; pointer-events: none; }
+  .sday div { font: italic 500 34px/1.15 var(--display); color: var(--gold-soft); text-shadow: 0 0 30px rgba(227,189,106,.4); }
+  .sday small { display: block; font: 700 12px var(--body); letter-spacing: .22em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; font-style: normal; }
+  @keyframes ppFade { 0% { opacity: 0; } 18%, 75% { opacity: 1; } 100% { opacity: 0; } }
+  .spol { position: absolute; left: max(16px, env(safe-area-inset-left)); bottom: calc(env(safe-area-inset-bottom, 0px) + 50px); width: min(46vw, 190px); background: #fbf8f1; padding: 8px 8px 10px; border-radius: 3px; box-shadow: 0 12px 30px rgba(0,0,0,.6); animation: ppPol .55s cubic-bezier(.3,1.4,.5,1) both; pointer-events: none; }
+  .spol.r { left: auto; right: max(16px, env(safe-area-inset-right)); }
+  .spol img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: #ddd; }
+  .spol p { margin: 6px 2px 0; font: 600 17px/1.15 var(--hand); color: #2a2318; max-height: 3.5em; overflow: hidden; }
+  @keyframes ppPol { from { transform: translateY(40px) rotate(var(--rot, -4deg)) scale(.8); opacity: 0; } to { transform: rotate(var(--rot, -4deg)); opacity: 1; } }
+  .spin2 { width: 16px; height: 16px; border-radius: 50%; background: #ffd27a; border: 2px solid #fff6df; box-shadow: 0 0 0 4px rgba(255,170,90,.25), 0 0 18px 6px rgba(255,190,110,.65); display: grid; place-items: center; animation: ppPop .5s cubic-bezier(.3,1.6,.5,1) both; }
+  .spin2.fin { background: var(--rose); box-shadow: 0 0 0 4px rgba(232,138,138,.3), 0 0 20px 8px rgba(232,138,138,.7); }
+  .slab { position: absolute; left: 22px; top: -4px; white-space: nowrap; font: 600 12px var(--body); color: #fff; background: rgba(12,17,36,.85); border: 1px solid rgba(243,220,165,.3); border-radius: 6px; padding: 2px 7px; }
+  .slab em { font-style: normal; color: #ff9a8f; margin-right: 4px; font-weight: 700; }
+  @keyframes ppPop { from { transform: scale(0); } to { transform: scale(1); } }
+  .ssum { position: absolute; left: 0; right: 0; margin: 0 auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); width: min(380px, calc(100vw - 24px)); max-height: 62vh; overflow-y: auto; background: rgba(12,17,36,.9); border: 1px solid rgba(243,220,165,.3); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 -10px 40px rgba(0,0,0,.5); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); animation: ppRise .6s ease both; }
+  .ssum .nums { display: flex; justify-content: space-around; text-align: center; }
+  .ssum .nums b { display: block; font: 700 30px/1 var(--display); color: var(--gold-soft); }
+  .ssum .nums span { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+  .ssum ol { margin: 0; padding: 0; list-style: none; columns: 2; column-gap: 14px; font-size: 13px; }
+  .ssum ol li { break-inside: avoid; padding: 2px 0; display: flex; gap: 6px; }
+  .ssum ol li em { font-style: normal; color: #ff9a8f; font-weight: 700; min-width: 18px; }
+  .ssum .word { text-align: center; font: italic 500 34px/1.1 var(--display); color: var(--gold-soft); text-shadow: 0 0 24px rgba(227,189,106,.5); }
+  .ssum .row { display: flex; gap: 8px; }
+  .ssum .row .btn { flex: 1; }
+  .ssum .h { font: italic 500 22px/1.2 var(--display); color: var(--gold-soft); text-align: center; }
+  .ssum .from p { font-size: 21px; }
+  .scoll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+  .scoll img { width: 84px; height: 84px; object-fit: cover; border-radius: 6px; flex: none; }
+  .tprog { display: flex; flex-direction: column; gap: 4px; }
+  .tprog .sbar { position: static; grid-template-columns: auto 1fr auto; text-shadow: none; color: var(--gold-soft); font-size: 11px; }
+  .rcard.recap { border-color: var(--gold); background: linear-gradient(135deg, rgba(227,189,106,.18), var(--night-2)); }
+  @media (prefers-reduced-motion: reduce) { .tshow .sn { display: none; } .scard, .spol, .spin2, .ssum, .sday { animation: none; } }
   `;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
@@ -151,7 +208,8 @@
       <div class="tstatus"><span class="tdot" id="tDot"></span><span id="tGps">GPS je vypnuté</span><span class="prog" id="tProg"></span></div>
       <div class="tscroll" id="tPlan"></div>
       <div id="tRoute" hidden style="display:flex;flex-direction:column;gap:12px;min-height:0">
-        <button class="btn" id="tStart">Spustit</button>
+        <div id="tStartRow" style="display:flex;gap:8px"><button class="btn" id="tStart" style="flex:1">Spustit</button><button class="btn ghost" id="tPrevw">▶ Ukázka trasy</button></div>
+        <div class="tprog" id="tProgW" hidden></div>
         <div class="tscroll slist" id="tList"></div>
         <div class="tnext" id="tNext" hidden>
           <div class="num" id="tNum">1</div>
@@ -182,6 +240,7 @@
   const fotoDone = new Set(store.get('pp-v-foto', []));
   const intro = new Set(store.get('pp-v-intro', []));
   const awarded = new Set(store.get('pp-v-awarded', []));
+  const seenPreview = new Set(store.get('pp-v-ukazka', []));
   const settings = Object.assign({ rate: 1, auto: true, voice: '' }, store.get('pp-v-set', {}));
   const save = () => { store.set('pp-v-visited', [...visited]); store.set('pp-v-foto', [...fotoDone]); store.set('pp-v-intro', [...intro]); store.set('pp-v-set', settings); };
 
@@ -217,6 +276,11 @@
     const intro = document.createElement('p'); intro.style.margin = '0'; intro.style.color = 'var(--muted)';
     intro.textContent = 'Tvůj první víkend ve Vídni. Vyber část dne, a až dojdete k zastávce, ozvu se sám. Na místech s dárečkem na tebe čeká ozdoba na stromeček.';
     p.appendChild(intro);
+    if (recapReady()) {
+      const rc = document.createElement('button'); rc.className = 'rcard recap';
+      rc.innerHTML = '<strong>🎞️ Náš vánoční víkend</strong><span class="d">Celý víkend znovu, zastávku po zastávce, s našimi fotkami.</span><span class="go">▶</span>';
+      rc.onclick = () => playRecap(); p.appendChild(rc);
+    }
     let lastDay = '';
     V.okruhy.forEach(r => {
       if (r.den !== lastDay) { lastDay = r.den; const h = document.createElement('div'); h.className = 'dayh'; h.textContent = PP.fmtDay(r.den, { weekday: 'long', day: 'numeric', month: 'numeric' }); p.appendChild(h); }
@@ -244,7 +308,7 @@
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, subdomains: 'abc', attribution: '© OpenStreetMap' }).addTo(map);
       layer = L.layerGroup().addTo(map);
       map.on('dragstart', () => setFollow(false));
-      if (window.ResizeObserver) new ResizeObserver(() => { if (!map) return; map.invalidateSize(); if (!pos && !current && lastPts.length > 1) map.fitBounds(L.latLngBounds(lastPts).pad(.15)); else if (current) map.panTo([current.lat, current.lon]); }).observe($('tmap'));
+      if (window.ResizeObserver) new ResizeObserver(() => { if (!map) return; map.invalidateSize(); if (showing) return; if (!pos && !current && lastPts.length > 1) map.fitBounds(L.latLngBounds(lastPts).pad(.15)); else if (current) map.panTo([current.lat, current.lon]); }).observe($('tmap'));
       map.on('click', (e) => { if (simulate) onPos({ coords: { latitude: e.latlng.lat, longitude: e.latlng.lng, accuracy: 5 } }, true); });
     }
     layer.clearLayers(); line = null;
@@ -268,10 +332,12 @@
     stops = r.zastavky.map(byId).filter(Boolean); smalls = (r.drobnosti || []).map(byId).filter(Boolean);
     $('tTitle').textContent = r.nazov.replace(/^[^:]+:\s*/, '');
     $('tPlan').hidden = true; $('tRoute').hidden = false;
-    $('tStart').hidden = false; $('tNext').hidden = true; $('tStory').hidden = true; $('tPlayer').hidden = true;
+    $('tStart').hidden = false; $('tStartRow').hidden = false; $('tPrevw').hidden = !(r.trasa && r.id !== 'finale'); $('tProgW').hidden = true;
+    $('tNext').hidden = true; $('tStory').hidden = true; $('tPlayer').hidden = true;
     $('tStart').textContent = r.id === 'finale' ? 'Jsme na cestě do Schönbrunnu' : 'Spustit procházku';
     renderList(); $('tList').hidden = r.id === 'finale';
     setupMap(); updateNext();
+    if (r.trasa && r.id !== 'finale' && !seenPreview.has(r.id) && !visited.has(r.zastavky[0])) { seenPreview.add(r.id); store.set('pp-v-ukazka', [...seenPreview]); setTimeout(() => { if (route === r && !current && !showing && !$('tStart').hidden) playPreview(r); }, 700); }
   }
   function renderList() {
     const box = $('tList'); box.innerHTML = '';
@@ -288,7 +354,7 @@
     if (smalls.length) { const p = document.createElement('p'); p.style.cssText = 'margin:10px 0 0;font-size:14px;color:var(--muted)'; p.textContent = `A cestou ${smalls.length} ${smalls.length === 1 ? 'drobnost' : smalls.length < 5 ? 'drobnosti' : 'drobností'}, o kterých se dozvíš, až půjdeš kolem.`; box.appendChild(p); }
   }
   $('tStart').onclick = () => {
-    $('tStart').hidden = true; $('tNext').hidden = false; $('tList').hidden = true;
+    $('tStart').hidden = true; $('tStartRow').hidden = true; $('tNext').hidden = false; $('tList').hidden = true; $('tProgW').hidden = route.id === 'finale' || !route.trasa;
     unlockSpeech(); startCompass(); try { navigator.wakeLock && navigator.wakeLock.request('screen').catch(() => {}); } catch {}
     if (route.id === 'finale') { showFinale(); }
     else if (route.uvod && !intro.has(route.id)) { intro.add(route.id); save(); speak([{ text: route.uvod }], () => { if (!current) $('tPlayer').hidden = true; }); }
@@ -307,6 +373,7 @@
     pos = { lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy || 10 };
     if (!simulate) gps(pos.acc <= 35 ? 'live' : 'warn', pos.acc <= 35 ? `Poloha přesná na ±${Math.round(pos.acc)} m` : `Slabý signál GPS (±${Math.round(pos.acc)} m)`);
     const ll = [pos.lat, pos.lon];
+    if (showing) return;
     if (!meM) { meM = L.marker(ll, { icon: L.divIcon({ className: '', html: '<div class="mev"></div>', iconSize: [18, 18], iconAnchor: [9, 9] }), interactive: false, zIndexOffset: 1000 }).addTo(map); meC = L.circle(ll, { radius: pos.acc, color: '#4b8dff', weight: 1, fillOpacity: .08, interactive: false }).addTo(map); }
     else { meM.setLatLng(ll); meC.setLatLng(ll).setRadius(pos.acc); }
     if (following) map.panTo(ll);
@@ -347,8 +414,9 @@
     $('tProg').textContent = route.id === 'finale' ? `🎄 ${gotGule().length} z ${gulaStops().length}` : `${done}/${t}`;
     const n = nextStop();
     if (route.id === 'finale') { const f = byId('schonbrunn'); $('tNum').textContent = '♥'; $('tNextL').textContent = 'Cíl'; $('tNextN').textContent = 'Imperial Lights, brána Meidlinger Tor'; setArrow(f); return; }
-    if (!n) { $('tNum').textContent = '✓'; $('tNextL').textContent = 'Hotovo'; $('tNextN').textContent = 'Tahle část je za vámi.'; $('tDist').textContent = ''; $('tArrow').style.visibility = 'hidden'; return; }
+    if (!n) { renderWalkProg(); $('tNum').textContent = '✓'; $('tNextL').textContent = 'Hotovo'; $('tNextN').textContent = 'Tahle část je za vámi.'; $('tDist').textContent = ''; $('tArrow').style.visibility = 'hidden'; return; }
     $('tNum').textContent = stops.indexOf(n) + 1; $('tNextL').textContent = 'Další zastávka'; $('tNextN').textContent = n.nazov; setArrow(n);
+    renderWalkProg();
   }
   function setArrow(t) {
     if (!pos) { $('tDist').textContent = '–'; $('tArrow').style.visibility = 'hidden'; return; }
@@ -414,14 +482,14 @@
   $('tSkip').onclick = () => { if (!segs.length) return; si++; wi = 0; paused = false; speaking = true; cur = null; speechSynthesis.cancel(); $('tPlay').textContent = '⏸ Pauza'; next(); };
   $('tTest').onclick = () => { $('tMenu').hidden = true; unlockSpeech(); loadVoices(); speak([{ text: 'Ahoj Peťko, jsem tvůj průvodce po Vídni.' }], () => { if (!current) $('tPlayer').hidden = true; }); };
   $('tMenuBtn').onclick = () => { $('tMenu').hidden = !$('tMenu').hidden; if (!$('tMenu').hidden) loadVoices(); };
-  $('tReset').onclick = () => { ['pp-v-visited','pp-v-foto','pp-v-intro','pp-v-awarded','pp-v-revealed','pp-v-finale-started'].forEach(k => { try { localStorage.removeItem(k); } catch {} }); location.reload(); };
+  $('tReset').onclick = () => { ['pp-v-ukazka', 'pp-v-visited','pp-v-foto','pp-v-intro','pp-v-awarded','pp-v-revealed','pp-v-finale-started'].forEach(k => { try { localStorage.removeItem(k); } catch {} }); location.reload(); };
   $('tSim').onclick = () => { simulate = !simulate; $('tSimS').textContent = simulate ? 'zap.' : 'vyp.'; $('tMenu').hidden = true; if (simulate) { stopGps(); gps('warn', 'Zkušební režim: ťukni na mapu'); } else if (route && $('tStart').hidden) startGps(); };
 
   /* ---------- story ---------- */
   function showStory(s, auto, quiet) {
     if (s.finale) return;
     if (current && current !== s) stopSpeech();
-    current = s; asking = null; $('tList').hidden = true;
+    current = s; asking = null; $('tList').hidden = true; $('tProgW').hidden = true;
     const small = s.typ === 'drobnost';
     const firstTime = !visited.has(s.id);
     markVisited(s);
@@ -514,6 +582,7 @@
     stopSpeech(); $('tStory').hidden = true; $('tPlayer').hidden = true; $('tSheet').classList.remove('tall');
     current = null; updateNext(); setupMap(); setFollow(true);
     if (!$('tStart').hidden && route && route.id !== 'finale') { renderList(); $('tList').hidden = false; }
+    if ($('tStart').hidden && route && route.id !== 'finale' && route.trasa) $('tProgW').hidden = false;
     if (was && was.gula && visited.has(was.id) && !awarded.has(was.id)) { if (was.lety && nextFlight(was) && (nextFlight(was) - PP.now()) < 35 * 60000) awardAfterLanding(was); else award(was); return; }
     if (queue.length) showStory(queue.shift(), true);
   };
@@ -647,13 +716,281 @@
       fb.querySelector('.cam').onclick = () => PP.pick('2026-12-06', 'fileCam', ex);
       fb.querySelector('.lib').onclick = () => PP.pick('2026-12-06', 'fileLib', ex);
       const c = document.createElement('button'); c.className = 'btn ghost'; c.textContent = 'Zavřít'; c.onclick = () => { ov.hidden = true; showPlan(); route = null; setupMap(); };
-      ov.append(card, fb, c);
+      const rb = document.createElement('button'); rb.className = 'btn'; rb.textContent = '🎞️ Přehrát náš víkend'; rb.onclick = () => { ov.hidden = true; stopSpeech(); route = null; showPlan(); playRecap(); };
+      ov.append(card, fb, rb, c);
       speak([{ text: V.tajenka.replace(/♥/g, '').trim().toLowerCase() + '.' }, { text: f.poOdhaleni }]);
       updateTreeN();
     }
   }
 
+  /* ---------- route geometry ---------- */
+  const fmtKm = (m) => `${(m / 1000).toFixed(1).replace('.', ',')} km`;
+  const P = (a) => ({ lat: a[0], lon: a[1] });
+  const geoCache = {};
+  function geo(r) {
+    if (geoCache[r.id]) return geoCache[r.id];
+    const segs = r.trasa ? decode(r.trasa) : [];
+    const pts = [], seg = [], cum = [];
+    segs.forEach((sg, k) => sg.forEach((p, j) => {
+      const i = pts.length; pts.push(p); seg.push(k);
+      cum.push(i === 0 ? 0 : cum[i - 1] + (j === 0 ? 0 : dist(P(pts[i - 1]), P(p))));
+    }));
+    const main = r.zastavky.map(byId).filter(s => s && !s.finale);
+    const at = {}; let from = 0;
+    main.forEach(s => {
+      let best = -1, bd = Infinity;
+      for (let j = from; j < pts.length; j++) {
+        const d = dist(P(pts[j]), s);
+        if (d < 60) { best = j; bd = d; while (j + 1 < pts.length && dist(P(pts[j + 1]), s) < bd) { j++; best = j; bd = dist(P(pts[j]), s); } break; }
+        if (d < bd) { bd = d; best = j; }
+      }
+      if (best < 0) best = from; at[s.id] = best; from = best;
+    });
+    return (geoCache[r.id] = { pts, seg, cum, at, main, total: cum.length ? cum[cum.length - 1] : 0 });
+  }
+  const cumAt = (g, s) => g.pts.length ? g.cum[g.at[s.id]] : 0;
+  function slice(g, d) {
+    const out = []; let cur = null, sp = -1;
+    for (let i = 0; i < g.pts.length; i++) {
+      if (g.cum[i] > d) {
+        if (cur && i > 0 && g.seg[i] === g.seg[i - 1]) { const a = g.pts[i - 1], b = g.pts[i], t = (d - g.cum[i - 1]) / ((g.cum[i] - g.cum[i - 1]) || 1); cur.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]); }
+        break;
+      }
+      if (g.seg[i] !== sp) { cur = []; out.push(cur); sp = g.seg[i]; }
+      cur.push(g.pts[i]);
+    }
+    return out.filter(x => x.length > 1);
+  }
+  function barEl(label, dots, frac, right) {
+    const b = document.createElement('div'); b.className = 'sbar';
+    const l = document.createElement('span'); l.textContent = label;
+    const t = document.createElement('div'); t.className = 'strack';
+    const f = document.createElement('div'); f.className = 'fill'; f.style.width = Math.max(0, Math.min(1, frac)) * 100 + '%'; t.appendChild(f);
+    dots.forEach((on, i) => { const d = document.createElement('i'); if (on) d.className = 'on'; d.style.left = (dots.length > 1 ? i / (dots.length - 1) : 0) * 100 + '%'; t.appendChild(d); });
+    const r = document.createElement('span'); r.textContent = right;
+    b.append(l, t, r); return b;
+  }
+  function renderWalkProg() {
+    const box = $('tProgW'); box.innerHTML = '';
+    if (!route || !route.trasa || route.id === 'finale') return;
+    const g = geo(route), m = g.main; if (!m.length) return;
+    let last = -1; m.forEach((s, i) => { if (visited.has(s.id)) last = i; });
+    const dk = last >= 0 ? cumAt(g, m[last]) : 0;
+    const nx = nextStop(); const no = nx ? m.indexOf(nx) + 1 : m.length;
+    box.appendChild(barEl(nx ? `Zastávka ${no}/${m.length}` : 'Hotovo ✓', m.map(s => visited.has(s.id)), g.total ? dk / g.total : 0, `${fmtKm(dk)} z ${fmtKm(g.total)}`));
+  }
+
+  /* ---------- night show (route preview + weekend recap) ---------- */
+  let showing = false, showTok = 0, showLayer = null, speed = 1, showPins = [];
+  const STOP = 'ppStop';
+  const sleep = (ms, tok) => new Promise((res, rej) => setTimeout(() => (tok === showTok ? res() : rej(STOP)), ms / speed));
+  function animate(ms, fn, tok) {
+    return new Promise((res, rej) => {
+      const t0 = performance.now(), dur = ms / speed;
+      const f = (now) => {
+        if (tok !== showTok) return rej(STOP);
+        const t = Math.min(1, (now - t0) / dur); fn(t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+        if (t < 1) requestAnimationFrame(f); else res();
+      };
+      requestAnimationFrame(f);
+    });
+  }
+  function showBegin() {
+    const tok = ++showTok; showing = true; stopSpeech();
+    $('tour').classList.add('showing'); $('tmap').classList.add('night'); $('tMenu').hidden = true;
+    layer.clearLayers(); if (meM) { meM.remove(); meC.remove(); meM = meC = null; }
+    if (showLayer) showLayer.remove(); showLayer = L.layerGroup().addTo(map); showPins = [];
+    const old = $('tShow'); if (old) old.remove();
+    const ov = document.createElement('div'); ov.className = 'tshow'; ov.id = 'tShow';
+    for (let i = 0; i < 22; i++) { const s = document.createElement('span'); s.className = 'sn'; s.textContent = i % 4 ? '•' : '❄'; s.style.left = Math.random() * 100 + '%'; s.style.fontSize = (5 + Math.random() * 9) + 'px'; s.style.animationDuration = (7 + Math.random() * 8) + 's'; s.style.animationDelay = (-Math.random() * 12) + 's'; ov.appendChild(s); }
+    const h = document.createElement('div'); h.className = 'shead';
+    const sp = document.createElement('button'); sp.className = 'tchip'; sp.textContent = speed > 1 ? '⏩ 2×' : '⏵ 1×'; sp.setAttribute('aria-label', 'Rychlost přehrávání');
+    sp.onclick = () => { speed = speed > 1 ? 1 : 2; sp.textContent = speed > 1 ? '⏩ 2×' : '⏵ 1×'; };
+    const x = document.createElement('button'); x.className = 'tchip icon'; x.textContent = '✕'; x.setAttribute('aria-label', 'Zavřít'); x.onclick = showEnd;
+    h.append(sp, x); ov.appendChild(h);
+    document.querySelector('#tour .mapwrap').appendChild(ov);
+    map.invalidateSize();
+    return tok;
+  }
+  function showEnd() {
+    showTok++; showing = false;
+    const ov = $('tShow'); if (ov) ov.remove();
+    if (showLayer) { showLayer.remove(); showLayer = null; }
+    $('tour').classList.remove('showing'); $('tmap').classList.remove('night');
+    try { map.stop(); } catch {}
+    setTimeout(() => { map.invalidateSize(); setupMap(); }, 60);
+  }
+  function glow() {
+    const a = L.polyline([], { color: '#ff5a4e', weight: 16, opacity: .16, interactive: false, lineCap: 'round' }).addTo(showLayer);
+    const b = L.polyline([], { color: '#ff7a5c', weight: 8, opacity: .38, interactive: false, lineCap: 'round' }).addTo(showLayer);
+    const c = L.polyline([], { color: '#fff0dc', weight: 3, opacity: .95, interactive: false, lineCap: 'round' }).addTo(showLayer);
+    return { set(ll) { a.setLatLngs(ll); b.setLatLngs(ll); c.setLatLngs(ll); } };
+  }
+  function pin(s, n, fin) {
+    showPins.forEach(p => p.setIcon(pinIcon(p._n, null, p._fin)));
+    const m = L.marker([s.lat, s.lon], { icon: pinIcon(n, s.nazov, fin), interactive: false, zIndexOffset: 500 }).addTo(showLayer);
+    m._n = n; m._fin = fin; showPins.push(m);
+  }
+  function pinIcon(n, name, fin) {
+    const lab = name ? `<span class="slab"><em>${n}</em>${name.replace(/[<>&]/g, '')}</span>` : '';
+    return L.divIcon({ className: '', html: `<div class="spin2${fin ? ' fin' : ''}" style="position:relative">${lab}</div>`, iconSize: [16, 16], iconAnchor: [8, 8] });
+  }
+  function card(o) {
+    const ov = $('tShow'); if (!ov) return; const old = ov.querySelector('.scard'); if (old) old.remove();
+    if (!o) return;
+    const c = document.createElement('div'); c.className = 'scard' + (o.big ? ' big' : '');
+    if (o.big) { c.innerHTML = '<div class="k"></div><b></b><span></span>'; c.querySelector('.k').textContent = o.k || ''; }
+    else { c.innerHTML = '<div class="sno"></div><div class="stx"><b></b><span></span></div>'; c.querySelector('.sno').textContent = o.n; }
+    c.querySelector('b').textContent = o.b; c.querySelector('span').textContent = o.s || '';
+    ov.appendChild(c);
+  }
+  function bar(label, dots, frac, right) {
+    const ov = $('tShow'); if (!ov) return; const old = ov.querySelector('.sbar'); if (old) old.remove();
+    ov.appendChild(barEl(label, dots, frac, right));
+  }
+  function polaroids(list) {
+    const ov = $('tShow'); if (!ov) return; ov.querySelectorAll('.spol').forEach(e => e.remove());
+    list.forEach((p, i) => {
+      const d = document.createElement('div'); d.className = 'spol' + (i % 2 ? ' r' : '');
+      d.style.setProperty('--rot', (i % 2 ? 4 : -5) + (Math.random() * 3 - 1.5) + 'deg');
+      const img = document.createElement('img'); img.alt = ''; img.src = PP.publicUrl(p.cesta); img.onerror = () => d.remove();
+      d.appendChild(img);
+      if (p.popis) { const t = document.createElement('p'); t.textContent = p.popis; d.appendChild(t); }
+      ov.appendChild(d);
+    });
+  }
+  const preload = (list, tok) => Promise.race([Promise.all(list.map(p => new Promise(r => { const i = new Image(); i.onload = i.onerror = r; i.src = PP.publicUrl(p.cesta); }))), sleep(2500 * speed, tok)]);
+  function summary(build) {
+    const ov = $('tShow'); if (!ov) return; const s = document.createElement('div'); s.className = 'ssum'; build(s); ov.appendChild(s);
+  }
+  const plural = (n, a, b, c) => n === 1 ? a : n >= 2 && n <= 4 ? b : c;
+  const rName = (r) => r.nazov.replace(/^[^:]+:\s*/, '');
+
+  async function playPreview(r) {
+    const g = geo(r); if (!g.pts.length || !map) return;
+    const tok = showBegin();
+    try {
+      const m = g.main, gifts = m.filter(s => s.gula).length, min = Math.max(5, Math.round(g.total / 1000 * 15 / 5) * 5);
+      map.fitBounds(L.latLngBounds(g.pts).pad(.12), { animate: false });
+      card({ big: true, k: 'Ukázka trasy', b: rName(r), s: `${m.length} ${plural(m.length, 'zastávka', 'zastávky', 'zastávek')} · ${fmtKm(g.total)} · asi ${min} min chůze` });
+      bar(`Zastávka 0/${m.length}`, m.map(() => false), 0, '0,0 km');
+      await sleep(2600, tok);
+      const line = glow(); let d = 0;
+      for (let i = 0; i < m.length; i++) {
+        const s = m[i], d1 = Math.max(d, cumAt(g, s)), dur = Math.min(2600, Math.max(1100, (d1 - d) * 3));
+        card(null);
+        map.flyTo([s.lat, s.lon], 16, { duration: dur / 1000 / speed });
+        await animate(dur, t => line.set(slice(g, d + (d1 - d) * t)), tok);
+        d = d1; pin(s, i + 1);
+        card({ n: i + 1, b: s.nazov + (s.gula ? ' 🎁' : ''), s: s.kratce || '' });
+        bar(`Zastávka ${i + 1}/${m.length}`, m.map((_, j) => j <= i), g.total ? d / g.total : 0, fmtKm(d));
+        await sleep(1900, tok);
+      }
+      card(null);
+      if (g.total > d) await animate(Math.min(1500, (g.total - d) * 3), t => line.set(slice(g, d + (g.total - d) * t)), tok);
+      map.flyToBounds(L.latLngBounds(g.pts).pad(.12), { duration: 1.4 / speed });
+      await sleep(1500, tok);
+      bar(`Zastávka ${m.length}/${m.length}`, m.map(() => true), 1, fmtKm(g.total));
+      summary(su => {
+        su.innerHTML = '<div class="h"></div><div class="nums"></div><ol></ol><div class="row"></div>';
+        su.querySelector('.h').textContent = rName(r);
+        const nums = [[fmtKm(g.total).replace(' km', ''), 'km'], [`${min}`, 'min chůze'], [m.length, plural(m.length, 'zastávka', 'zastávky', 'zastávek')]];
+        if (gifts) nums.push([gifts, gifts === 1 ? 'dáreček 🎁' : 'dárečky 🎁']);
+        nums.forEach(([a, b]) => { const d2 = document.createElement('div'); d2.innerHTML = '<b></b><span></span>'; d2.querySelector('b').textContent = a; d2.querySelector('span').textContent = b; su.querySelector('.nums').appendChild(d2); });
+        m.forEach((s, i) => { const li = document.createElement('li'); li.innerHTML = '<em></em><span></span>'; li.querySelector('em').textContent = i + 1; li.querySelector('span').textContent = s.nazov; su.querySelector('ol').appendChild(li); });
+        const again = document.createElement('button'); again.className = 'btn ghost'; again.textContent = '↺ Znovu'; again.onclick = () => playPreview(r);
+        const go = document.createElement('button'); go.className = 'btn'; go.textContent = 'Jdeme na to ♥'; go.onclick = showEnd;
+        su.querySelector('.row').append(again, go);
+      });
+    } catch (e) { if (e !== STOP) { console.error(e); showEnd(); } }
+  }
+
+  /* ---------- weekend recap ---------- */
+  const TRIP = ['2026-12-05', '2026-12-06', '2026-12-07'];
+  function recapReady() { return store.get('pp-v-revealed', false) || PP.preview || PP.dayKey(PP.now()) >= '2026-12-07'; }
+  function recapPlan() {
+    const photos = (PP.PHOTOS || []).filter(p => TRIP.includes(p.den));
+    const fin = byId('schonbrunn');
+    const all = []; // {r, s, fin}
+    V.okruhy.forEach(r => { if (r.id === 'finale') { if (fin) all.push({ r, s: fin, fin: true }); } else geo(r).main.forEach(s => all.push({ r, s })); });
+    const by = new Map(all.map(x => [x.s.id, Object.assign(x, { ph: [] })]));
+    const left = [];
+    photos.forEach(p => {
+      const u = (p.ukol || '').replace(/^Duško:\s*/, '');
+      const hit = all.find(x => u.startsWith(x.s.nazov + ':'));
+      if (hit) hit.ph.push(p); else left.push(p);
+    });
+    const inc = (x) => visited.has(x.s.id) || x.ph.length || (x.fin && store.get('pp-v-revealed', false));
+    let chosen = all.filter(inc);
+    const rest = [];
+    left.forEach(p => {
+      if (p.lat == null) { rest.push(p); return; }
+      let best = null, bd = 250; chosen.forEach(x => { const d = dist({ lat: p.lat, lon: p.lon }, x.s); if (d < bd) { bd = d; best = x; } });
+      if (best) best.ph.push(p); else rest.push(p);
+    });
+    const days = TRIP.map(den => ({ den, items: chosen.filter(x => x.r.den === den) })).filter(d => d.items.length);
+    return { days, count: chosen.length, photos: photos.length, rest };
+  }
+  async function playRecap() {
+    if (!map) setupMap();
+    const plan = recapPlan();
+    const tok = showBegin();
+    try {
+      if (!plan.count) {
+        card({ big: true, k: 'Náš vánoční víkend', b: 'Zatím tu nic není', s: 'Až projdete první zastávky, objeví se tady.' });
+        await sleep(3500, tok); showEnd(); return;
+      }
+      const items = plan.days.flatMap(d => d.items);
+      const ll = items.map(x => [x.s.lat, x.s.lon]);
+      map.fitBounds(L.latLngBounds(ll).pad(.15), { animate: false });
+      card({ big: true, k: 'Náš vánoční víkend', b: 'Vídeň, 5.–7. prosince', s: `${plan.count} ${plural(plan.count, 'zastávka', 'zastávky', 'zastávek')} · ${plan.photos} ${plural(plan.photos, 'fotka', 'fotky', 'fotek')} · ty a já ♥` });
+      await sleep(3000, tok); card(null);
+      let n = 0, km = 0;
+      const dots = () => items.map((_, j) => j < n);
+      for (const day of plan.days) {
+        const ov = $('tShow'); const sd = document.createElement('div'); sd.className = 'sday';
+        sd.innerHTML = '<div><small></small><span></span></div>'; sd.querySelector('small').textContent = 'Vídeň'; sd.querySelector('span').textContent = PP.fmtDay(day.den, { weekday: 'long', day: 'numeric', month: 'long' });
+        ov.appendChild(sd); setTimeout(() => sd.remove(), 2300);
+        await sleep(2300, tok);
+        let curR = null, line = null, g = null, d = 0;
+        for (const x of day.items) {
+          n++;
+          if (x.r !== curR) { curR = x.r; g = geo(x.r); line = g.pts.length && !x.fin ? glow() : null; d = x.fin ? 0 : cumAt(g, x.s); }
+          const d1 = x.fin ? 0 : Math.max(d, cumAt(g, x.s)), dur = Math.min(2600, Math.max(1100, (d1 - d) * 3 || 1300));
+          polaroids([]); card(null);
+          const pl = preload(x.ph.slice(0, 4), tok);
+          map.flyTo([x.s.lat, x.s.lon], x.fin ? 15.5 : 16, { duration: dur / 1000 / speed });
+          if (line) await animate(dur, t => line.set(slice(g, d + (d1 - d) * t)), tok); else await sleep(dur, tok);
+          km += d1 - d; d = d1;
+          pin(x.s, x.fin ? '♥' : n, x.fin);
+          card({ n: x.fin ? '♥' : n, b: x.fin ? 'Imperial Lights' : x.s.nazov, s: x.s.kratce || '' });
+          bar(`Zastávka ${n}/${items.length}`, dots(), items.length > 1 ? (n - 1) / (items.length - 1) : 1, fmtKm(km));
+          await pl;
+          const ph = x.ph.slice(0, 4);
+          if (!ph.length) { await sleep(1900, tok); continue; }
+          for (let k = 0; k < ph.length; k += 2) { polaroids(ph.slice(k, k + 2)); await sleep(k ? 2600 : 3000, tok); }
+        }
+      }
+      polaroids([]); card(null);
+      map.flyToBounds(L.latLngBounds(ll).pad(.15), { duration: 1.6 / speed });
+      await sleep(1700, tok);
+      const rev = store.get('pp-v-revealed', false);
+      summary(su => {
+        su.innerHTML = '<div class="h">Náš vánoční víkend</div><div class="nums"></div>';
+        [[fmtKm(km).replace(' km', ''), 'km pěšky'], [plan.count, plural(plan.count, 'zastávka', 'zastávky', 'zastávek')], [plan.photos, plural(plan.photos, 'fotka', 'fotky', 'fotek')], [`${gotGule().length}`, 'ozdob 🎄']].forEach(([a, b]) => { const d2 = document.createElement('div'); d2.innerHTML = '<b></b><span></span>'; d2.querySelector('b').textContent = a; d2.querySelector('span').textContent = b; su.querySelector('.nums').appendChild(d2); });
+        if (rev) { const w = document.createElement('div'); w.className = 'word'; w.textContent = V.tajenka; su.appendChild(w); }
+        if (plan.rest.length) { const c = document.createElement('div'); c.className = 'scoll'; plan.rest.slice(0, 12).forEach(p => { const i = document.createElement('img'); i.alt = ''; i.loading = 'lazy'; i.src = PP.publicUrl(p.cesta); c.appendChild(i); }); su.appendChild(c); }
+        const ol = document.createElement('ol'); let k = 0; items.forEach(x => { k++; const li = document.createElement('li'); li.innerHTML = '<em></em><span></span>'; li.querySelector('em').textContent = k; li.querySelector('span').textContent = x.fin ? 'Imperial Lights ♥' : x.s.nazov; ol.appendChild(li); }); su.appendChild(ol);
+        const row = document.createElement('div'); row.className = 'row';
+        const again = document.createElement('button'); again.className = 'btn ghost'; again.textContent = '↺ Znovu'; again.onclick = () => playRecap();
+        const cl = document.createElement('button'); cl.className = 'btn'; cl.textContent = 'Zavřít ♥'; cl.onclick = showEnd;
+        row.append(again, cl); su.appendChild(row);
+      });
+    } catch (e) { if (e !== STOP) { console.error(e); showEnd(); } }
+  }
+  $('tPrevw').onclick = () => { if (route) playPreview(route); };
+
   function onPhoto(extra) { if (extra && extra.stopId) { fotoDone.add(extra.stopId); save(); if (current && current.id === extra.stopId) { const sc = $('tStory').scrollTop; showStory(current, false, true); $('tStory').scrollTop = sc; } } }
 
-  window.PRUVODCE = { init, open, onPhoto, _state: () => ({ route: route && route.id, current: current && current.id, visited: [...visited], gule: gotGule().map(m => m.id), revealed: store.get('pp-v-revealed', false), speaking }) };
+  window.PRUVODCE = { init, open, onPhoto, _preview: (id) => playPreview(V.okruhy.find(r => r.id === id)), _recap: () => playRecap(), _state: () => ({ showing, route: route && route.id, current: current && current.id, visited: [...visited], gule: gotGule().map(m => m.id), revealed: store.get('pp-v-revealed', false), speaking }) };
 })();
